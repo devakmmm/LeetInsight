@@ -49,6 +49,8 @@ import {
   ArrowUpRight,
   CalendarClock,
 } from "lucide-react";
+import { AdBanner } from "@/components/AdBanner";
+import { TIERS } from "@/lib/tiers";
 
 // ----------------------------
 // CONFIG
@@ -309,10 +311,15 @@ export default function App() {
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showAd, setShowAd] = useState(true);
 
   const [insights, setInsights] = useState(null);
   const [dashboard, setDashboard] = useState(null);
   const [history, setHistory] = useState(null);
+  
+  // Assume free tier for now (will integrate auth later)
+  const userTier = TIERS.FREE;
+  const showAds = userTier === TIERS.FREE;
 
   const tone = useMemo(() => {
     const score = insights?.readiness?.final ?? 0;
@@ -404,6 +411,11 @@ export default function App() {
         <AmbientAccents />
 
         <div className="relative mx-auto max-w-6xl px-4 py-10 md:py-14">
+          {/* Ad Banner for Free Tier */}
+          {showAds && showAd && (
+            <AdBanner onClose={() => setShowAd(false)} />
+          )}
+
           {/* Header */}
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
