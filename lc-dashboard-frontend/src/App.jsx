@@ -194,28 +194,28 @@ const AmbientAccents = memo(function AmbientAccents() {
 // ----------------------------
 const GlowCard = memo(function GlowCard({ children, className, glowColor = "emerald" }) {
   const glowColors = {
-    emerald: "hover:shadow-emerald-500/20",
-    blue: "hover:shadow-blue-500/20",
-    purple: "hover:shadow-purple-500/20",
-    cyan: "hover:shadow-cyan-500/20",
-    green: "hover:shadow-green-500/20",
-    orange: "hover:shadow-orange-500/20",
+    emerald: "hover:shadow-lg hover:shadow-emerald-500/30",
+    blue: "hover:shadow-lg hover:shadow-blue-500/30",
+    purple: "hover:shadow-lg hover:shadow-purple-500/30",
+    cyan: "hover:shadow-lg hover:shadow-cyan-500/30",
+    green: "hover:shadow-lg hover:shadow-green-500/30",
+    orange: "hover:shadow-lg hover:shadow-orange-500/30",
   };
   
   const borderColors = {
-    emerald: "border-emerald-500/20",
-    blue: "border-blue-500/20",
-    purple: "border-purple-500/20",
-    cyan: "border-cyan-500/20",
-    green: "border-green-500/20",
-    orange: "border-orange-500/20",
+    emerald: "border-emerald-500/20 hover:border-emerald-500/50",
+    blue: "border-blue-500/20 hover:border-blue-500/50",
+    purple: "border-purple-500/20 hover:border-purple-500/50",
+    cyan: "border-cyan-500/20 hover:border-cyan-500/50",
+    green: "border-green-500/20 hover:border-green-500/50",
+    orange: "border-orange-500/20 hover:border-orange-500/50",
   };
   
   return (
     <div
       className={cx(
-        "group relative rounded-2xl border bg-black/60 p-4 backdrop-blur-xl",
-        "hover:bg-black/70 hover:border-white/20 transition-all duration-300",
+        "group relative rounded-2xl border bg-black/60 p-4 backdrop-blur-xl cursor-pointer",
+        "hover:bg-black/70 hover:scale-[1.02] transition-all duration-300",
         borderColors[glowColor],
         glowColors[glowColor],
         className
@@ -453,14 +453,25 @@ const EmptyState = memo(function EmptyState({ title, subtitle, action }) {
 const ReadinessFlip = memo(function ReadinessFlip({ readiness, tone }) {
   return (
     <GlowCard glowColor="emerald">
-      <div className="flex items-center gap-4">
-        <ProgressRing value={readiness?.composite ?? 0} label={tone.label} />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <tone.icon className="h-5 w-5 text-emerald-400" />
-            <span className="font-semibold text-white">{tone.label}</span>
+      <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+        <tone.icon className="h-4 w-4 text-emerald-400" />
+        <span className="font-medium">{tone.label}</span>
+        <span className="font-semibold text-emerald-400">Readiness</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="relative h-16 w-16 flex-shrink-0">
+          <svg className="h-16 w-16 -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="38" fill="transparent" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
+            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#10b981" strokeWidth="8" strokeLinecap="round"
+              strokeDasharray={2 * Math.PI * 38} strokeDashoffset={2 * Math.PI * 38 - ((readiness?.composite ?? 0) / 100) * 2 * Math.PI * 38}
+              style={{ transition: 'stroke-dashoffset 0.5s ease-out', filter: 'drop-shadow(0 0 6px rgba(16,185,129,0.5))' }} />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="text-xl font-bold text-white">{Math.round(readiness?.composite ?? 0)}</div>
           </div>
-          <p className="mt-1 text-sm text-gray-400">{tone.hint}</p>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-gray-400 line-clamp-2">{tone.hint}</p>
         </div>
       </div>
     </GlowCard>
