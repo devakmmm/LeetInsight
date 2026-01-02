@@ -710,7 +710,9 @@ export default function App() {
                   </div>
                   
                   {/* Top Metrics */}
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <CompetitiveRank totalSolved={solved?.all} />
+                    
                     <ReadinessFlip readiness={readiness} tone={tone} />
 
                     <Metric
@@ -738,6 +740,11 @@ export default function App() {
                       }
                       icon={TrendingUp}
                     />
+                  </div>
+                  
+                  {/* Tier Legend */}
+                  <div className="mt-4">
+                    <TierLegend />
                   </div>
 
                   {/* Tabs - Enhanced */}
