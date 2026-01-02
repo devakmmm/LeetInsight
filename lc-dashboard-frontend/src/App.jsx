@@ -48,9 +48,12 @@ import {
   Gauge,
   ArrowUpRight,
   CalendarClock,
+  LogOut,
 } from "lucide-react";
 import { AdBanner } from "@/components/AdBanner";
+import { AuthPage } from "@/components/AuthPage";
 import { TIERS } from "@/lib/tiers";
+import { useAuth } from "@/lib/AuthContext";
 
 // ----------------------------
 // CONFIG
@@ -307,6 +310,8 @@ function LoadingGrid() {
 // Main App
 // ----------------------------
 export default function App() {
+  const { user, loading: authLoading, logout } = useAuth();
+  
   const [username, setUsername] = useState("remembermyname");
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(false);
@@ -317,9 +322,22 @@ export default function App() {
   const [dashboard, setDashboard] = useState(null);
   const [history, setHistory] = useState(null);
   
-  // Assume free tier for now (will integrate auth later)
-  const userTier = TIERS.FREE;
+  // Get tier from user
+  const userTier = user?.tier || TIERS.FREE;
   const showAds = userTier === TIERS.FREE;
+
+  // Show auth page if not logged in
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthPage onSuccess={() => window.location.reload()} />;
+  }
 
   const tone = useMemo(() => {
     const score = insights?.readiness?.final ?? 0;
@@ -459,9 +477,20 @@ export default function App() {
             >
               <div className="flex items-center justify-between">
                 <div className="text-sm font-medium">Query</div>
-                <Badge variant="secondary" className="rounded-full">
-                  Render-ready
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{user.email}</span>
+                  <button
+                    onClick={logout}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    title="Logout"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <Badge variant="secondary" className="rounded-full">
+                Render-ready
+              </Badge>
               </div>
 
               <div className="flex flex-col gap-2 md:flex-row">

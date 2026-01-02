@@ -4,9 +4,12 @@ import fetch from "node-fetch";
 import pg from "pg";
 import cron from "node-cron";
 import cors from "cors";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 
 const { Pool } = pg;
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-key-change-in-production";
 
 const app = express();
 app.use(express.json());
@@ -439,7 +442,93 @@ function readinessScore({ velocityPerDay, breadth, ramp, weightedCov, recency })
   };
 }
 
-// ---------------- Routes ----------------
+// ============= AUTH MIDDLEWARE & HELPERS =============
+function verifyToken(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ ok: false, error: "Missing token" });
+  
+  const token = auth.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (e) {
+    res.status(401).json({ ok: false, error: "Invalid token" });
+  }
+}
+
+// ============= AUTH ROUTES =============
+app.post("/api/auth/signup", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ ok: false, error: "Email and password required" });
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // Insert user
+    const result = await dbQuery(
+      `INSERT INTO auth_users (email, password_hash, tier)
+       VALUES ($1, $2, 'free')
+       RETURNING id, email, tier`,
+      [email.toLowerCase(), passwordHash]
+    );
+
+    if (!result.rows.length) throw new Error("Signup failed");
+
+    const user = result.rows[0];
+    const token = jwt.sign({ id: user.id, email: user.email, tier: user.tier }, JWT_SECRET, { expiresIn: "30d" });
+
+    res.json({ ok: true, user, token });
+  } catch (e) {
+    const msg = e.message.includes("duplicate key") ? "Email already exists" : e.message;
+    res.status(400).json({ ok: false, error: msg });
+  }
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ ok: false, error: "Email and password required" });
+
+    // Find user
+    const result = await dbQuery(
+      `SELECT id, email, password_hash, tier FROM auth_users WHERE email = $1`,
+      [email.toLowerCase()]
+    );
+
+    if (!result.rows.length) return res.status(401).json({ ok: false, error: "User not found" });
+
+    const user = result.rows[0];
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    
+    if (!passwordMatch) return res.status(401).json({ ok: false, error: "Invalid password" });
+
+    const token = jwt.sign({ id: user.id, email: user.email, tier: user.tier }, JWT_SECRET, { expiresIn: "30d" });
+
+    res.json({ ok: true, user: { id: user.id, email: user.email, tier: user.tier }, token });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.get("/api/auth/me", verifyToken, async (req, res) => {
+  try {
+    const result = await dbQuery(
+      `SELECT id, email, tier FROM auth_users WHERE id = $1`,
+      [req.user.id]
+    );
+
+    if (!result.rows.length) return res.status(404).json({ ok: false, error: "User not found" });
+
+    res.json({ ok: true, user: result.rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ============= LEETCODE ROUTES ================
 app.get("/", (req, res) => res.send("OK - LeetCode Dashboard API"));
 app.get("/health", (req, res) => res.json({ ok: true }));
 
