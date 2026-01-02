@@ -73,6 +73,7 @@ import {
 } from "@/components/PrivateLeaderboard";
 import { GoalsPanel } from "@/components/GoalSetting";
 import { EmailCaptureBanner, EmailCaptureModal } from "@/components/EmailCapture";
+import { ShareStatsModal, ShareButton } from "@/components/ShareableStats";
 
 // ----------------------------
 // CONFIG
@@ -525,6 +526,7 @@ export default function App() {
   const [showJoinLeaderboard, setShowJoinLeaderboard] = useState(false);
   const [viewLeaderboardCode, setViewLeaderboardCode] = useState(null);
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   
   // Growth phase: Everyone gets full access, no tier restrictions
   const showAds = false; // Disabled - monetization coming later
@@ -828,6 +830,9 @@ export default function App() {
                 <CalendarClock className="mr-2 h-5 w-5" />
                 Snapshot
               </Button>
+              {insights && (
+                <ShareButton onClick={() => setShowShareModal(true)} />
+              )}
             </div>
 
             {error && (
@@ -1429,6 +1434,16 @@ export default function App() {
         isOpen={showEmailModal}
         onClose={() => setShowEmailModal(false)}
         source="modal"
+      />
+
+      <ShareStatsModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        username={username}
+        solved={solved}
+        readiness={readiness?.final}
+        streak={streak}
+        velocity={velocity?.perDay}
       />
     </div>
   );
