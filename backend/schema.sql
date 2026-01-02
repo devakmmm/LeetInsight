@@ -37,3 +37,19 @@ CREATE TABLE IF NOT EXISTS lc_snapshot_tags (
 CREATE INDEX IF NOT EXISTS idx_lc_users_auth_id ON lc_users(auth_user_id);
 CREATE INDEX IF NOT EXISTS idx_lc_snapshots_user_time ON lc_snapshots(user_id, captured_at DESC);
 CREATE INDEX IF NOT EXISTS idx_lc_snapshot_tags_tag ON lc_snapshot_tags(tag_slug);
+
+-- Leaderboard tracking (tracks all searched users)
+CREATE TABLE IF NOT EXISTS leaderboard_users (
+  id BIGSERIAL PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  total_solved INT NOT NULL DEFAULT 0,
+  solved_easy INT NOT NULL DEFAULT 0,
+  solved_medium INT NOT NULL DEFAULT 0,
+  solved_hard INT NOT NULL DEFAULT 0,
+  tier TEXT NOT NULL DEFAULT 'Bronze',
+  first_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_leaderboard_solved ON leaderboard_users(total_solved DESC);
+CREATE INDEX IF NOT EXISTS idx_leaderboard_tier ON leaderboard_users(tier);

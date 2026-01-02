@@ -105,6 +105,39 @@ function readinessTone(score) {
 }
 
 // ----------------------------
+// Competitive Tier System
+// ----------------------------
+const COMP_TIERS = [
+  { name: "Bronze", min: 0, max: 99, color: "from-amber-700 to-amber-900", textColor: "text-amber-500", borderColor: "border-amber-700/50", bgColor: "bg-amber-900/20", glow: "shadow-amber-700/30", icon: "🥉", description: "Just getting started" },
+  { name: "Silver", min: 100, max: 299, color: "from-slate-400 to-slate-600", textColor: "text-slate-300", borderColor: "border-slate-400/50", bgColor: "bg-slate-700/20", glow: "shadow-slate-400/30", icon: "🥈", description: "Building momentum" },
+  { name: "Gold", min: 300, max: 599, color: "from-yellow-400 to-yellow-600", textColor: "text-yellow-400", borderColor: "border-yellow-500/50", bgColor: "bg-yellow-900/20", glow: "shadow-yellow-500/30", icon: "🥇", description: "Solid foundation" },
+  { name: "Platinum", min: 600, max: 999, color: "from-cyan-300 to-cyan-500", textColor: "text-cyan-300", borderColor: "border-cyan-400/50", bgColor: "bg-cyan-900/20", glow: "shadow-cyan-400/30", icon: "💎", description: "Advanced grinder" },
+  { name: "Diamond", min: 1000, max: 1499, color: "from-blue-400 to-purple-500", textColor: "text-blue-300", borderColor: "border-blue-400/50", bgColor: "bg-blue-900/20", glow: "shadow-blue-400/30", icon: "💠", description: "Elite problem solver" },
+  { name: "Iridescent", min: 1500, max: Infinity, color: "from-fuchsia-400 via-purple-400 to-cyan-400", textColor: "text-fuchsia-300", borderColor: "border-fuchsia-400/50", bgColor: "bg-fuchsia-900/20", glow: "shadow-fuchsia-400/40", icon: "👑", description: "Top 1% - Legendary" }
+];
+
+function getTier(totalSolved) {
+  const count = totalSolved ?? 0;
+  return COMP_TIERS.find(t => count >= t.min && count <= t.max) || COMP_TIERS[0];
+}
+
+function getNextTier(totalSolved) {
+  const count = totalSolved ?? 0;
+  const currentIndex = COMP_TIERS.findIndex(t => count >= t.min && count <= t.max);
+  return currentIndex < COMP_TIERS.length - 1 ? COMP_TIERS[currentIndex + 1] : null;
+}
+
+function getProgressToNextTier(totalSolved) {
+  const count = totalSolved ?? 0;
+  const tier = getTier(count);
+  const nextTier = getNextTier(count);
+  if (!nextTier) return { progress: 100, remaining: 0 };
+  const rangeSize = tier.max - tier.min + 1;
+  const progress = ((count - tier.min) / rangeSize) * 100;
+  return { progress: Math.min(progress, 100), remaining: nextTier.min - count };
+}
+
+// ----------------------------
 // Animated background accents (Optimized with CSS animations)
 // ----------------------------
 const AmbientAccents = memo(function AmbientAccents() {
@@ -190,6 +223,102 @@ const GlowCard = memo(function GlowCard({ children, className, glowColor = "emer
     >
       <div className="relative z-10">{children}</div>
     </div>
+  );
+});
+
+const CompetitiveRank = memo(function CompetitiveRank({ totalSolved, leaderboardRank }) {
+  const tier = getTier(totalSolved);
+  const nextTier = getNextTier(totalSolved);
+  const { progress, remaining } = getProgressToNextTier(totalSolved);
+  const isTop250 = leaderboardRank?.isTop250;
+  const isTop10 = leaderboardRank?.isTop10;
+  
+  return (
+    <GlowCard glowColor="purple" className="relative overflow-hidden">
+      {(tier.name === "Iridescent" || isTop10) && (
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 opacity-20" style={{ background: "linear-gradient(45deg, transparent 30%, rgba(236,72,153,0.3) 50%, transparent 70%)", animation: "shimmer 3s ease-in-out infinite" }} />
+          <style>{`@keyframes shimmer { 0%, 100% { transform: translateX(-100%); } 50% { transform: translateX(100%); } }`}</style>
+        </div>
+      )}
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <Crown className="h-4 w-4 text-purple-400" />
+            <span className="font-medium">Competitive Rank</span>
+          </div>
+          {isTop10 && (
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/40">
+              <span className="text-sm">🏆</span>
+              <span className="text-xs font-bold text-yellow-400">TOP 10</span>
+            </div>
+          )}
+          {isTop250 && !isTop10 && (
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gradient-to-r from-fuchsia-500/20 to-purple-500/20 border border-fuchsia-500/30">
+              <span className="text-xs font-semibold text-fuchsia-400">TOP 250</span>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-4">
+          <div className={cx("relative h-20 w-20 rounded-2xl flex items-center justify-center border-2 shadow-lg", tier.borderColor, tier.bgColor, tier.glow)}>
+            <div className={cx("absolute inset-0.5 rounded-xl bg-gradient-to-br opacity-20", tier.color)} />
+            <span className="text-3xl relative z-10">{tier.icon}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className={cx("text-2xl font-bold", tier.textColor)}>{tier.name}</div>
+            <div className="text-sm text-gray-400">{tier.description}</div>
+            {leaderboardRank?.rank && leaderboardRank?.totalUsers >= 300 && (
+              <div className="mt-1 text-xs text-gray-500">Rank #{leaderboardRank.rank} of {leaderboardRank.totalUsers}</div>
+            )}
+            {nextTier && (
+              <div className="mt-2">
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>{remaining} to {nextTier.name}</span>
+                  <span>{Math.round(progress)}%</span>
+                </div>
+                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <div className={cx("h-full rounded-full bg-gradient-to-r transition-all duration-500", nextTier.color)} style={{ width: `${progress}%` }} />
+                </div>
+              </div>
+            )}
+            {!nextTier && <div className="mt-2 text-xs text-fuchsia-400 flex items-center gap-1"><Sparkles className="h-3 w-3" />Max rank achieved!</div>}
+          </div>
+        </div>
+        {isTop10 && (
+          <div className="mt-3 p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+            <div className="flex items-center gap-2 text-xs text-yellow-400"><span>🎁</span><span className="font-medium">Free Premium for 1 month!</span></div>
+          </div>
+        )}
+      </div>
+    </GlowCard>
+  );
+});
+
+const TierLegend = memo(function TierLegend({ leaderboardStats }) {
+  const totalUsers = leaderboardStats?.totalUsers || 0;
+  const usersNeeded = Math.max(0, 300 - totalUsers);
+  return (
+    <GlowCard glowColor="cyan" className="p-3">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-xs text-gray-400 font-medium flex items-center gap-2">
+          <Target className="h-3 w-3 text-cyan-400" />TIER THRESHOLDS
+        </div>
+        {usersNeeded > 0 ? (
+          <div className="text-xs text-gray-500"><span className="text-fuchsia-400">{usersNeeded}</span> more users to unlock Top 250</div>
+        ) : (
+          <div className="text-xs text-fuchsia-400">🏆 Top 250 Active!</div>
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {COMP_TIERS.map((tier) => (
+          <div key={tier.name} className={cx("flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border", tier.bgColor, tier.borderColor)}>
+            <span>{tier.icon}</span>
+            <span className={tier.textColor}>{tier.name}</span>
+            <span className="text-gray-500 ml-auto">{tier.max === Infinity ? `${tier.min}+` : `${tier.min}-${tier.max}`}</span>
+          </div>
+        ))}
+      </div>
+    </GlowCard>
   );
 });
 
@@ -368,6 +497,8 @@ export default function App() {
   const [insights, setInsights] = useState(null);
   const [dashboard, setDashboard] = useState(null);
   const [history, setHistory] = useState(null);
+  const [leaderboardRank, setLeaderboardRank] = useState(null);
+  const [leaderboardStats, setLeaderboardStats] = useState(null);
   
   // Growth phase: Everyone gets full access, no tier restrictions
   const showAds = false; // Disabled - monetization coming later
@@ -438,10 +569,12 @@ export default function App() {
 
     try {
       const qs = new URLSearchParams({ days: String(d) }).toString();
-      const [ins, dash, hist] = await Promise.all([
+      const [ins, dash, hist, lbRank, lbStats] = await Promise.all([
         fetch(`${API_BASE}/api/leetcode/insights/${encodeURIComponent(uname)}?${qs}`).then((r) => r.json()),
         fetch(`${API_BASE}/api/leetcode/dashboard/${encodeURIComponent(uname)}`).then((r) => r.json()),
         fetch(`${API_BASE}/api/leetcode/history/${encodeURIComponent(uname)}?${qs}`).then((r) => r.json()),
+        fetch(`${API_BASE}/api/leaderboard/rank/${encodeURIComponent(uname)}`).then((r) => r.json()).catch(() => ({ ok: false })),
+        fetch(`${API_BASE}/api/leaderboard/stats`).then((r) => r.json()).catch(() => ({ ok: false })),
       ]);
 
       if (!ins.ok) throw new Error(ins.error || "Insights failed");
@@ -451,6 +584,8 @@ export default function App() {
       setInsights(ins.data);
       setDashboard(dash.data);
       setHistory(hist.ok ? hist.data : null);
+      setLeaderboardRank(lbRank.ok ? lbRank.data : null);
+      setLeaderboardStats(lbStats.ok ? lbStats.data : null);
     } catch (e) {
       setError(e?.message || String(e));
     } finally {
@@ -711,7 +846,7 @@ export default function App() {
                   
                   {/* Top Metrics */}
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <CompetitiveRank totalSolved={solved?.all} />
+                    <CompetitiveRank totalSolved={solved?.all} leaderboardRank={leaderboardRank} />
                     
                     <ReadinessFlip readiness={readiness} tone={tone} />
 
@@ -744,7 +879,7 @@ export default function App() {
                   
                   {/* Tier Legend */}
                   <div className="mt-4">
-                    <TierLegend />
+                    <TierLegend leaderboardStats={leaderboardStats} />
                   </div>
 
                   {/* Tabs - Enhanced */}

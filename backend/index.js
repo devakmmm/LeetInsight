@@ -616,6 +616,11 @@ app.get("/api/leetcode/dashboard/:username", async (req, res) => {
 
     if (!profile) return res.status(404).json({ ok: false, error: "user not found or private" });
 
+    // Track user in leaderboard (non-blocking)
+    if (pool) {
+      upsertLeaderboardUser(username, profile).catch(() => {});
+    }
+
     const data = {
       profile,
       recentAccepted: recentAC,
@@ -801,3 +806,152 @@ if (pool) {
 // ---------------- Server ----------------
 const PORT = process.env.PORT || 5050;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+
+// ---------------- Leaderboard Functions ----------------
+const TIERS = [
+  { name: "Bronze", min: 0, max: 99 },
+  { name: "Silver", min: 100, max: 299 },
+  { name: "Gold", min: 300, max: 599 },
+  { name: "Platinum", min: 600, max: 999 },
+  { name: "Diamond", min: 1000, max: 1499 },
+  { name: "Iridescent", min: 1500, max: Infinity }
+];
+
+function getTierName(totalSolved) {
+  const count = totalSolved ?? 0;
+  const tier = TIERS.find(t => count >= t.min && count <= t.max);
+  return tier ? tier.name : "Bronze";
+}
+
+async function upsertLeaderboardUser(username, profile) {
+  const tier = getTierName(profile.solved.all);
+  await dbQuery(
+    `
+    INSERT INTO leaderboard_users (username, total_solved, solved_easy, solved_medium, solved_hard, tier, last_updated_at)
+    VALUES ($1, $2, $3, $4, $5, $6, NOW())
+    ON CONFLICT (username) DO UPDATE SET
+      total_solved = EXCLUDED.total_solved,
+      solved_easy = EXCLUDED.solved_easy,
+      solved_medium = EXCLUDED.solved_medium,
+      solved_hard = EXCLUDED.solved_hard,
+      tier = EXCLUDED.tier,
+      last_updated_at = NOW()
+    `,
+    [username.toLowerCase(), profile.solved.all, profile.solved.easy, profile.solved.medium, profile.solved.hard, tier]
+  );
+}
+
+// Leaderboard endpoints
+app.get("/api/leaderboard", async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(Number(req.query.limit) || 250, 1), 500);
+    
+    // Get total count first
+    const countResult = await dbQuery(`SELECT COUNT(*) as count FROM leaderboard_users`);
+    const totalUsers = parseInt(countResult.rows[0].count);
+    
+    // Get top users
+    const result = await dbQuery(
+      `SELECT username, total_solved, solved_easy, solved_medium, solved_hard, tier, first_seen_at
+       FROM leaderboard_users
+       ORDER BY total_solved DESC
+       LIMIT $1`,
+      [limit]
+    );
+    
+    res.json({
+      ok: true,
+      data: {
+        totalUsers,
+        minUsersForTop250: 300,
+        top250Active: totalUsers >= 300,
+        leaderboard: result.rows.map((row, idx) => ({
+          rank: idx + 1,
+          username: row.username,
+          totalSolved: row.total_solved,
+          easy: row.solved_easy,
+          medium: row.solved_medium,
+          hard: row.solved_hard,
+          tier: row.tier,
+          joinedAt: row.first_seen_at
+        }))
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get("/api/leaderboard/stats", async (req, res) => {
+  try {
+    const countResult = await dbQuery(`SELECT COUNT(*) as count FROM leaderboard_users`);
+    const totalUsers = parseInt(countResult.rows[0].count);
+    
+    const tierStats = await dbQuery(
+      `SELECT tier, COUNT(*) as count FROM leaderboard_users GROUP BY tier ORDER BY 
+       CASE tier 
+         WHEN 'Iridescent' THEN 1 
+         WHEN 'Diamond' THEN 2 
+         WHEN 'Platinum' THEN 3 
+         WHEN 'Gold' THEN 4 
+         WHEN 'Silver' THEN 5 
+         WHEN 'Bronze' THEN 6 
+       END`
+    );
+    
+    res.json({
+      ok: true,
+      data: {
+        totalUsers,
+        minUsersForTop250: 300,
+        top250Active: totalUsers >= 300,
+        usersNeeded: Math.max(0, 300 - totalUsers),
+        tierDistribution: tierStats.rows.map(r => ({ tier: r.tier, count: parseInt(r.count) }))
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get("/api/leaderboard/rank/:username", async (req, res) => {
+  try {
+    const username = (req.params.username || "").trim().toLowerCase();
+    if (!username) return res.status(400).json({ ok: false, error: "username required" });
+    
+    // Get user's rank
+    const result = await dbQuery(
+      `SELECT username, total_solved, tier,
+              (SELECT COUNT(*) + 1 FROM leaderboard_users WHERE total_solved > lu.total_solved) as rank,
+              (SELECT COUNT(*) FROM leaderboard_users) as total_users
+       FROM leaderboard_users lu
+       WHERE username = $1`,
+      [username]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.json({ ok: true, data: { found: false } });
+    }
+    
+    const row = result.rows[0];
+    const rank = parseInt(row.rank);
+    const totalUsers = parseInt(row.total_users);
+    
+    res.json({
+      ok: true,
+      data: {
+        found: true,
+        username: row.username,
+        totalSolved: row.total_solved,
+        tier: row.tier,
+        rank,
+        totalUsers,
+        isTop250: totalUsers >= 300 && rank <= 250,
+        isTop10: totalUsers >= 300 && rank <= 10,
+        percentile: Math.round((1 - rank / totalUsers) * 100)
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});

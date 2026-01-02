@@ -198,6 +198,38 @@ export function AuthPage({ onSuccess }) {
                 <div className="text-sm text-gray-500">Streak system</div>
               </div>
             </div>
+
+            {/* Top 250 Callout */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="mt-8 p-4 rounded-2xl bg-gradient-to-r from-fuchsia-500/10 via-purple-500/10 to-cyan-500/10 border border-fuchsia-500/20"
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">👑</div>
+                <div>
+                  <div className="font-semibold text-white flex items-center gap-2">
+                    Top 250 Leaderboard
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30">Coming Soon</span>
+                  </div>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Once we hit <span className="text-white font-medium">300 users</span>, we unlock the global Top 250 leaderboard. 
+                    Sign up now to secure your spot and track your rank.
+                  </p>
+                  <div className="mt-3 flex items-center gap-4 text-xs">
+                    <div className="flex items-center gap-1.5 text-yellow-400">
+                      <span>🏆</span>
+                      <span>Top 10 = Free Premium (1 month)</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-cyan-400">
+                      <span>📊</span>
+                      <span>Daily rank tracking</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         </div>
 
