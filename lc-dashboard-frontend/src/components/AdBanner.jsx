@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function AdBanner({ onClose }) {
+export function AdBanner({ onClose, onUpgradeClick }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -18,7 +18,7 @@ export function AdBanner({ onClose }) {
         </div>
       </div>
       <div className="flex gap-2 ml-4">
-        <Button size="sm" className="h-8">
+        <Button size="sm" className="h-8" onClick={onUpgradeClick}>
           Upgrade
         </Button>
         <button

@@ -6,10 +6,13 @@ import cron from "node-cron";
 import cors from "cors";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import Stripe from "stripe";
 
 
 const { Pool } = pg;
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-key-change-in-production";
+const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY || "sk_test_dummy";
+const stripe = new Stripe(STRIPE_SECRET);
 
 const app = express();
 app.use(express.json());
@@ -525,6 +528,70 @@ app.get("/api/auth/me", verifyToken, async (req, res) => {
     res.json({ ok: true, user: result.rows[0] });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ============= STRIPE ROUTES ================
+app.post("/api/stripe/checkout", verifyToken, async (req, res) => {
+  try {
+    const { priceId } = req.body;
+    if (!priceId) return res.status(400).json({ ok: false, error: "priceId required" });
+
+    const session = await stripe.checkout.sessions.create({
+      customer_email: req.user.email,
+      payment_method_types: ["card"],
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: "subscription",
+      success_url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/dashboard?payment=success`,
+      cancel_url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/dashboard?payment=cancelled`,
+      metadata: { userId: String(req.user.id) },
+    });
+
+    res.json({ ok: true, sessionId: session.id, url: session.url });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    return res.status(400).json({ ok: false, error: "Webhook secret not configured" });
+  }
+
+  try {
+    const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+
+    if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.created") {
+      const subscription = event.data.object;
+      const userId = subscription.metadata?.userId;
+
+      if (userId) {
+        await dbQuery(
+          `UPDATE auth_users SET tier = 'premium', updated_at = NOW() WHERE id = $1`,
+          [userId]
+        );
+      }
+    }
+
+    if (event.type === "customer.subscription.deleted") {
+      const subscription = event.data.object;
+      const userId = subscription.metadata?.userId;
+
+      if (userId) {
+        await dbQuery(
+          `UPDATE auth_users SET tier = 'free', updated_at = NOW() WHERE id = $1`,
+          [userId]
+        );
+      }
+    }
+
+    res.json({ ok: true, received: true });
+  } catch (e) {
+    console.error("Webhook error:", e.message);
+    res.status(400).json({ ok: false, error: e.message });
   }
 });
 

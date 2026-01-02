@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import { AdBanner } from "@/components/AdBanner";
 import { AuthPage } from "@/components/AuthPage";
+import { PricingModal } from "@/components/PricingModal";
 import { TIERS } from "@/lib/tiers";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -317,6 +318,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showAd, setShowAd] = useState(true);
+  const [showPricingModal, setShowPricingModal] = useState(false);
 
   const [insights, setInsights] = useState(null);
   const [dashboard, setDashboard] = useState(null);
@@ -431,7 +433,15 @@ export default function App() {
         <div className="relative mx-auto max-w-6xl px-4 py-10 md:py-14">
           {/* Ad Banner for Free Tier */}
           {showAds && showAd && (
-            <AdBanner onClose={() => setShowAd(false)} />
+            <AdBanner onClose={() => setShowAd(false)} onUpgradeClick={() => setShowPricingModal(true)} />
+          )}
+
+          {/* Pricing Modal */}
+          {showPricingModal && (
+            <PricingModal onClose={() => setShowPricingModal(false)} onPaymentSuccess={() => {
+              setShowPricingModal(false);
+              setShowAd(false);
+            }} />
           )}
 
           {/* Header */}
