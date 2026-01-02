@@ -119,24 +119,39 @@ const AmbientAccents = memo(function AmbientAccents() {
           0%, 100% { transform: translate(0, 0) scale(1); }
           50% { transform: translate(-20px, -15px) scale(0.95); }
         }
+        @keyframes float3 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-30px, 25px) scale(1.02); }
+        }
         .orb-1 { animation: float1 20s ease-in-out infinite; }
         .orb-2 { animation: float2 25s ease-in-out infinite; }
+        .orb-3 { animation: float3 22s ease-in-out infinite; }
       `}</style>
-      {/* Gradient Orbs - CSS animations instead of JS */}
+      {/* Gradient Orbs - Vibrant green/emerald + accent colors */}
       <div
-        className="orb-1 absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full blur-3xl opacity-20"
-        style={{ background: "radial-gradient(circle at 30% 30%, #3b82f6, transparent 50%)" }}
+        className="orb-1 absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full blur-3xl opacity-30"
+        style={{ background: "radial-gradient(circle at 30% 30%, #10b981, transparent 60%)" }}
       />
       <div
-        className="orb-2 absolute -bottom-44 -right-44 h-[700px] w-[700px] rounded-full blur-3xl opacity-15"
-        style={{ background: "radial-gradient(circle at 70% 70%, #8b5cf6, transparent 50%)" }}
+        className="orb-2 absolute -bottom-44 -right-44 h-[600px] w-[600px] rounded-full blur-3xl opacity-25"
+        style={{ background: "radial-gradient(circle at 70% 70%, #22d3ee, transparent 60%)" }}
+      />
+      <div
+        className="orb-3 absolute top-1/3 left-1/2 h-[400px] w-[400px] rounded-full blur-3xl opacity-20"
+        style={{ background: "radial-gradient(circle at 50% 50%, #a855f7, transparent 60%)" }}
       />
       
-      {/* Grid Pattern - Static */}
-      <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:24px_24px]" />
+      {/* Grid Pattern - More visible */}
+      <div 
+        className="absolute inset-0 opacity-30"
+        style={{
+          backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)",
+          backgroundSize: "40px 40px"
+        }}
+      />
       
       {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/50" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80" />
     </div>
   );
 });
@@ -144,20 +159,21 @@ const AmbientAccents = memo(function AmbientAccents() {
 // ----------------------------
 // Reusable components (Optimized - no motion animations)
 // ----------------------------
-const GlowCard = memo(function GlowCard({ children, className, glowColor = "blue" }) {
+const GlowCard = memo(function GlowCard({ children, className, glowColor = "emerald" }) {
   const glowColors = {
-    blue: "hover:shadow-blue-500/20",
-    purple: "hover:shadow-purple-500/20",
-    cyan: "hover:shadow-cyan-500/20",
-    green: "hover:shadow-green-500/20",
-    orange: "hover:shadow-orange-500/20",
+    emerald: "hover:shadow-emerald-500/25 hover:border-emerald-500/30",
+    blue: "hover:shadow-blue-500/25 hover:border-blue-500/30",
+    purple: "hover:shadow-purple-500/25 hover:border-purple-500/30",
+    cyan: "hover:shadow-cyan-500/25 hover:border-cyan-500/30",
+    green: "hover:shadow-green-500/25 hover:border-green-500/30",
+    orange: "hover:shadow-orange-500/25 hover:border-orange-500/30",
   };
   
   return (
     <div
       className={cx(
-        "group relative rounded-2xl border border-white/10 bg-gradient-to-br from-background/80 to-background/40 p-4 shadow-lg backdrop-blur-xl",
-        "hover:border-white/20 hover:shadow-2xl transition-all duration-200",
+        "group relative rounded-2xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-black/80 p-4 shadow-xl backdrop-blur-xl",
+        "hover:shadow-2xl transition-all duration-300",
         glowColors[glowColor],
         className
       )}
@@ -167,43 +183,47 @@ const GlowCard = memo(function GlowCard({ children, className, glowColor = "blue
   );
 });
 
-const Metric = memo(function Metric({ title, value, sub, icon: Icon, right, color = "blue" }) {
+const Metric = memo(function Metric({ title, value, sub, icon: Icon, right, color = "emerald" }) {
   const iconBgColors = {
-    blue: "from-blue-500/20 to-cyan-500/10",
-    purple: "from-purple-500/20 to-pink-500/10",
-    green: "from-green-500/20 to-emerald-500/10",
-    orange: "from-orange-500/20 to-yellow-500/10",
+    emerald: "from-emerald-500/30 to-green-500/20",
+    blue: "from-blue-500/30 to-cyan-500/20",
+    purple: "from-purple-500/30 to-pink-500/20",
+    green: "from-green-500/30 to-emerald-500/20",
+    orange: "from-orange-500/30 to-yellow-500/20",
+    cyan: "from-cyan-500/30 to-blue-500/20",
   };
   
   const iconColors = {
+    emerald: "text-emerald-400",
     blue: "text-blue-400",
     purple: "text-purple-400",
     green: "text-green-400",
     orange: "text-orange-400",
+    cyan: "text-cyan-400",
   };
 
   return (
     <GlowCard glowColor={color}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-gray-400">
             {Icon && <Icon className={cx("h-4 w-4", iconColors[color])} />}
             <span className="truncate font-medium">{title}</span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <div className="text-3xl font-bold tracking-tight">
+            <div className={cx("text-3xl font-bold tracking-tight", iconColors[color])}>
               {value}
             </div>
             {right && (
-              <div className="text-sm text-muted-foreground font-medium">{right}</div>
+              <div className="text-sm text-gray-400 font-medium">{right}</div>
             )}
           </div>
           {sub && (
-            <div className="mt-2 text-xs text-muted-foreground/80 leading-relaxed">{sub}</div>
+            <div className="mt-2 text-xs text-gray-500 leading-relaxed">{sub}</div>
           )}
         </div>
         <div className={cx(
-          "h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center",
+          "h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center border border-white/10",
           iconBgColors[color]
         )}>
           <Sparkles className={cx("h-5 w-5", iconColors[color])} />
@@ -220,6 +240,14 @@ const ProgressRing = memo(function ProgressRing({ value, label }) {
   const c = 2 * Math.PI * radius;
   const offset = c - (v / 100) * c;
 
+  // Color based on score
+  const getColor = (score) => {
+    if (score >= 80) return "#10b981"; // emerald
+    if (score >= 60) return "#22d3ee"; // cyan
+    if (score >= 40) return "#a855f7"; // purple
+    return "#f97316"; // orange
+  };
+
   return (
     <div className="flex items-center gap-4">
       <div className="relative h-24 w-24">
@@ -229,8 +257,7 @@ const ProgressRing = memo(function ProgressRing({ value, label }) {
             cy="50"
             r={radius}
             fill="transparent"
-            stroke="currentColor"
-            className="text-border"
+            stroke="rgba(255,255,255,0.1)"
             strokeWidth={stroke}
           />
           <circle
@@ -238,23 +265,25 @@ const ProgressRing = memo(function ProgressRing({ value, label }) {
             cy="50"
             r={radius}
             fill="transparent"
-            stroke="currentColor"
-            className="text-foreground"
+            stroke={getColor(v)}
             strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={c}
             strokeDashoffset={offset}
-            style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
+            style={{ 
+              transition: 'stroke-dashoffset 0.5s ease-out',
+              filter: `drop-shadow(0 0 8px ${getColor(v)}50)`
+            }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="text-xl font-semibold">{Math.round(v)}</div>
-          <div className="text-[10px] text-muted-foreground">/ 100</div>
+          <div className="text-2xl font-bold text-white">{Math.round(v)}</div>
+          <div className="text-[10px] text-gray-500">/ 100</div>
         </div>
       </div>
       <div className="min-w-0">
-        <div className="text-sm text-muted-foreground">{label}</div>
-        <div className="text-lg font-semibold">Readiness</div>
+        <div className="text-sm text-gray-400">{label}</div>
+        <div className="text-lg font-semibold text-emerald-400">Readiness</div>
       </div>
     </div>
   );
@@ -262,7 +291,7 @@ const ProgressRing = memo(function ProgressRing({ value, label }) {
 
 const MiniTag = memo(function MiniTag({ children }) {
   return (
-    <span className="inline-flex items-center rounded-full border bg-background/70 px-2 py-1 text-xs text-muted-foreground">
+    <span className="inline-flex items-center rounded-full border border-white/10 bg-gray-800/50 px-2 py-1 text-xs text-gray-400">
       {children}
     </span>
   );
@@ -270,12 +299,12 @@ const MiniTag = memo(function MiniTag({ children }) {
 
 const EmptyState = memo(function EmptyState({ title, subtitle, action }) {
   return (
-    <div className="rounded-2xl border bg-background/60 p-8 text-center shadow-sm backdrop-blur">
-      <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border bg-background/70">
-        <Gauge className="h-5 w-5" />
+    <div className="rounded-2xl border border-white/10 bg-gray-900/80 p-8 text-center shadow-xl backdrop-blur">
+      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/20 to-cyan-500/10">
+        <Gauge className="h-6 w-6 text-emerald-400" />
       </div>
-      <div className="text-lg font-semibold">{title}</div>
-      <div className="mt-1 text-sm text-muted-foreground">{subtitle}</div>
+      <div className="text-lg font-semibold text-white">{title}</div>
+      <div className="mt-1 text-sm text-gray-400">{subtitle}</div>
       {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
     </div>
   );
@@ -284,15 +313,15 @@ const EmptyState = memo(function EmptyState({ title, subtitle, action }) {
 // Simplified ReadinessFlip - removed flip animation for performance
 const ReadinessFlip = memo(function ReadinessFlip({ readiness, tone }) {
   return (
-    <GlowCard glowColor="blue">
+    <GlowCard glowColor="emerald">
       <div className="flex items-center gap-4">
         <ProgressRing value={readiness?.composite ?? 0} label={tone.label} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <tone.icon className="h-5 w-5 text-blue-400" />
-            <span className="font-semibold">{tone.label}</span>
+            <tone.icon className="h-5 w-5 text-emerald-400" />
+            <span className="font-semibold text-white">{tone.label}</span>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">{tone.hint}</p>
+          <p className="mt-1 text-sm text-gray-400">{tone.hint}</p>
         </div>
       </div>
     </GlowCard>
@@ -303,10 +332,10 @@ function LoadingGrid() {
   return (
     <div className="grid gap-4 md:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="rounded-2xl border bg-background/60 p-4 shadow-sm backdrop-blur">
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="mt-3 h-7 w-20" />
-          <Skeleton className="mt-2 h-3 w-44" />
+        <div key={i} className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 shadow-xl backdrop-blur">
+          <Skeleton className="h-4 w-28 bg-gray-800" />
+          <Skeleton className="mt-3 h-7 w-20 bg-gray-800" />
+          <Skeleton className="mt-2 h-3 w-44 bg-gray-800" />
         </div>
       ))}
     </div>
@@ -496,25 +525,25 @@ export default function App() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45 }}
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-gradient-to-r from-blue-500/10 to-purple-500/10 px-4 py-1.5 text-xs backdrop-blur-xl"
+                className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 px-4 py-1.5 text-xs backdrop-blur-xl"
               >
-                <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-foreground font-medium">LeetCode Intelligence</span>
-                <span className="text-muted-foreground">•</span>
-                <span className="text-muted-foreground">Live Analytics</span>
+                <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/50" />
+                <span className="text-emerald-300 font-semibold">LeetCode Intelligence</span>
+                <span className="text-gray-500">•</span>
+                <span className="text-gray-400">Live Analytics</span>
               </motion.div>
 
               <motion.h1
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, delay: 0.05 }}
-                className="mt-5 text-4xl font-bold tracking-tight md:text-5xl"
+                className="mt-5 text-4xl font-bold tracking-tight md:text-6xl"
               >
-                <span className="bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">
+                <span className="text-white drop-shadow-lg">
                   Make practice
                 </span>
                 <br />
-                <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-emerald-400 via-green-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-lg">
                   measurable.
                 </span>
               </motion.h1>
@@ -523,9 +552,9 @@ export default function App() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, delay: 0.1 }}
-                className="mt-4 max-w-xl text-base text-muted-foreground leading-relaxed"
+                className="mt-4 max-w-xl text-lg text-gray-300 leading-relaxed"
               >
-                Transform your LeetCode grind into <span className="text-foreground font-medium">measurable trajectory</span>. 
+                Transform your LeetCode grind into <span className="text-emerald-400 font-semibold">measurable trajectory</span>. 
                 Track readiness, velocity, and get AI-powered topic recommendations.
               </motion.p>
               
@@ -534,18 +563,18 @@ export default function App() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, delay: 0.15 }}
-                className="mt-5 flex flex-wrap gap-2"
+                className="mt-6 flex flex-wrap gap-3"
               >
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs text-blue-400 border border-blue-500/20">
-                  <Zap className="h-3 w-3" />
+                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-4 py-2 text-sm text-emerald-300 border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+                  <Zap className="h-4 w-4" />
                   Real-time Sync
                 </div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/10 px-3 py-1 text-xs text-purple-400 border border-purple-500/20">
-                  <Brain className="h-3 w-3" />
+                <div className="inline-flex items-center gap-2 rounded-full bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+                  <Brain className="h-4 w-4" />
                   AI Insights
                 </div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/10 px-3 py-1 text-xs text-cyan-400 border border-cyan-500/20">
-                  <Rocket className="h-3 w-3" />
+                <div className="inline-flex items-center gap-2 rounded-full bg-purple-500/20 px-4 py-2 text-sm text-purple-300 border border-purple-500/30 shadow-lg shadow-purple-500/10">
+                  <Rocket className="h-4 w-4" />
                   Interview Ready
                 </div>
               </motion.div>
@@ -556,27 +585,27 @@ export default function App() {
           </div>
 
           {/* Query Card - Enhanced */}
-          <GlowCard className="mt-8 p-5" glowColor="purple">
+          <GlowCard className="mt-8 p-6" glowColor="emerald">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                  <Activity className="h-5 w-5 text-purple-400" />
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500/30 to-cyan-500/20 flex items-center justify-center border border-emerald-500/30">
+                  <Activity className="h-6 w-6 text-emerald-400" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold">Analytics Query</div>
-                  <div className="text-xs text-muted-foreground">Fetch your latest LeetCode data</div>
+                  <div className="text-base font-semibold text-white">Analytics Query</div>
+                  <div className="text-sm text-gray-400">Fetch your latest LeetCode data</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Badge variant="secondary" className="rounded-full bg-green-500/10 text-green-400 border-green-500/20">
-                  <div className="h-1.5 w-1.5 rounded-full bg-green-400 mr-1.5 animate-pulse" />
+                <Badge variant="secondary" className="rounded-full bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+                  <div className="h-2 w-2 rounded-full bg-emerald-400 mr-2 animate-pulse shadow-lg shadow-emerald-400/50" />
                   Connected
                 </Badge>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-background/50 border border-white/10">
-                  <span className="text-xs text-muted-foreground">{user.email}</span>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-900/50 border border-white/10">
+                  <span className="text-xs text-gray-400">{user.email}</span>
                   <button
                     onClick={logout}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-red-400 transition-colors"
+                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-400 transition-colors"
                     title="Logout"
                   >
                     <LogOut className="h-3.5 w-3.5" />
@@ -591,12 +620,12 @@ export default function App() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter your LeetCode username..."
-                  className="h-11 bg-background/50 border-white/10 focus:border-purple-500/50 transition-colors rounded-xl"
+                  className="h-12 bg-gray-900/60 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors rounded-xl text-white placeholder:text-gray-500"
                 />
               </div>
               <div className="md:w-40">
                 <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
-                  <SelectTrigger className="h-11 bg-background/50 border-white/10 rounded-xl">
+                  <SelectTrigger className="h-12 bg-gray-900/60 border-white/10 rounded-xl text-white">
                     <SelectValue placeholder="Time Window" />
                   </SelectTrigger>
                   <SelectContent>
@@ -612,20 +641,20 @@ export default function App() {
             <div className="flex gap-3 mt-4">
               <Button
                 onClick={() => fetchAll(username, days)}
-                className="h-11 flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-lg shadow-purple-500/20 transition-all duration-300"
+                className="h-12 flex-1 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 shadow-lg shadow-emerald-500/30 transition-all duration-300 text-white font-semibold"
                 disabled={loading}
               >
-                <RefreshCw className={cx("mr-2 h-4 w-4", loading && "animate-spin")} />
+                <RefreshCw className={cx("mr-2 h-5 w-5", loading && "animate-spin")} />
                 {loading ? "Analyzing..." : "Analyze Profile"}
               </Button>
               <Button
                 onClick={takeSnapshot}
                 variant="secondary"
-                className="h-11 rounded-xl bg-background/50 border-white/10 hover:bg-background/70"
+                className="h-12 rounded-xl bg-gray-800/70 border-white/10 hover:bg-gray-700/70 hover:border-emerald-500/30 text-white"
                 disabled={loading}
                 title="Stores a snapshot in Postgres for trend tracking"
               >
-                <CalendarClock className="mr-2 h-4 w-4" />
+                <CalendarClock className="mr-2 h-5 w-5" />
                 Snapshot
               </Button>
             </div>
@@ -689,7 +718,7 @@ export default function App() {
 
                     <Metric
                       title="Velocity"
-                      color="green"
+                      color="cyan"
                       value={velocity?.perDay ?? "—"}
                       right={velocity?.perDay != null ? "problems/day" : null}
                       sub={
@@ -704,20 +733,20 @@ export default function App() {
                   {/* Tabs - Enhanced */}
                   <div className="mt-8">
                     <Tabs defaultValue="overview" className="w-full">
-                      <TabsList className="rounded-2xl border border-white/10 bg-background/60 p-1.5 shadow-lg backdrop-blur-xl">
-                        <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-white/10">
+                      <TabsList className="rounded-2xl border border-white/10 bg-gray-900/80 p-1.5 shadow-xl backdrop-blur-xl">
+                        <TabsTrigger value="overview" className="rounded-xl text-gray-400 data-[state=active]:text-emerald-400 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-emerald-500/30">
                           <Gauge className="h-4 w-4 mr-2" />
                           Overview
                         </TabsTrigger>
-                        <TabsTrigger value="trajectory" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/20 data-[state=active]:to-purple-500/20">
+                        <TabsTrigger value="trajectory" className="rounded-xl text-gray-400 data-[state=active]:text-cyan-400 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-blue-500/20">
                           <TrendingUp className="h-4 w-4 mr-2" />
                           Trajectory
                         </TabsTrigger>
-                        <TabsTrigger value="recommendations" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/20 data-[state=active]:to-purple-500/20">
+                        <TabsTrigger value="recommendations" className="rounded-xl text-gray-400 data-[state=active]:text-purple-400 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20">
                           <Target className="h-4 w-4 mr-2" />
                           Next Topics
                         </TabsTrigger>
-                        <TabsTrigger value="activity" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/20 data-[state=active]:to-purple-500/20">
+                        <TabsTrigger value="activity" className="rounded-xl text-gray-400 data-[state=active]:text-orange-400 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/20 data-[state=active]:to-yellow-500/20">
                           <Activity className="h-4 w-4 mr-2" />
                           Activity
                         </TabsTrigger>
@@ -725,41 +754,42 @@ export default function App() {
 
                       <TabsContent value="overview" className="mt-6">
                         <div className="grid gap-4 lg:grid-cols-3">
-                          <GlowCard className="lg:col-span-2 p-0" glowColor="cyan">
+                          <GlowCard className="lg:col-span-2 p-0" glowColor="emerald">
                             <CardHeader className="pb-2">
-                              <CardTitle className="flex items-center gap-2 text-base">
-                                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
-                                  <Gauge className="h-4 w-4 text-cyan-400" />
+                              <CardTitle className="flex items-center gap-2 text-base text-white">
+                                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500/30 to-cyan-500/20 flex items-center justify-center border border-emerald-500/30">
+                                  <Gauge className="h-4 w-4 text-emerald-400" />
                                 </div>
                                 Readiness Breakdown
                               </CardTitle>
-                              <CardDescription>Transparent components so you can trust the score.</CardDescription>
+                              <CardDescription className="text-gray-400">Transparent components so you can trust the score.</CardDescription>
                             </CardHeader>
                             <CardContent>
                               <div className="grid gap-3 md:grid-cols-2">
                                 {Object.entries(readiness?.components || {}).map(([k, v], i) => {
-                                  const colors = ["from-blue-500/10 to-cyan-500/5", "from-purple-500/10 to-pink-500/5", "from-green-500/10 to-emerald-500/5", "from-orange-500/10 to-yellow-500/5"];
+                                  const colors = ["from-emerald-500/20 to-cyan-500/10 border-emerald-500/30", "from-purple-500/20 to-pink-500/10 border-purple-500/30", "from-cyan-500/20 to-blue-500/10 border-cyan-500/30", "from-orange-500/20 to-yellow-500/10 border-orange-500/30"];
+                                  const textColors = ["text-emerald-400", "text-purple-400", "text-cyan-400", "text-orange-400"];
                                   return (
                                     <div 
                                       key={k} 
-                                      className={cx("rounded-xl border border-white/10 bg-gradient-to-br p-4", colors[i % colors.length])}
+                                      className={cx("rounded-xl border bg-gradient-to-br p-4", colors[i % colors.length])}
                                     >
-                                      <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{k}</div>
+                                      <div className="text-xs text-gray-400 font-medium uppercase tracking-wider">{k}</div>
                                       <div className="mt-3 flex items-end justify-between">
-                                        <div className="text-2xl font-bold">{v}</div>
-                                        <div className="text-xs text-muted-foreground/70">{k === "recencyFactor" ? "0–1" : "/ 100"}</div>
+                                        <div className={cx("text-2xl font-bold", textColors[i % textColors.length])}>{v}</div>
+                                        <div className="text-xs text-gray-500">{k === "recencyFactor" ? "0–1" : "/ 100"}</div>
                                       </div>
                                     </div>
                                   );
                                 })}
                               </div>
-                              <div className="mt-4 rounded-xl border border-white/10 bg-gradient-to-br from-background/50 to-background/30 p-4">
-                                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                                  <Brain className="h-4 w-4 text-purple-400" />
+                              <div className="mt-4 rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-cyan-500/5 p-4">
+                                <div className="flex items-center gap-2 text-sm font-medium text-emerald-400">
+                                  <Brain className="h-4 w-4" />
                                   Interpretation
                                 </div>
-                                <div className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                                  This dashboard optimizes for <span className="text-foreground">interview outcomes</span>: it values consistent progress, broad coverage,
+                                <div className="mt-2 text-sm text-gray-400 leading-relaxed">
+                                  This dashboard optimizes for <span className="text-emerald-400 font-medium">interview outcomes</span>: it values consistent progress, broad coverage,
                                   and increasing exposure to hard problems.
                                 </div>
                               </div>
@@ -768,13 +798,13 @@ export default function App() {
 
                           <GlowCard className="p-0" glowColor="purple">
                             <CardHeader className="pb-2">
-                              <CardTitle className="flex items-center gap-2 text-base">
-                                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                              <CardTitle className="flex items-center gap-2 text-base text-white">
+                                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500/30 to-pink-500/20 flex items-center justify-center border border-purple-500/30">
                                   <Rocket className="h-4 w-4 text-purple-400" />
                                 </div>
                                 Why LeetSight?
                               </CardTitle>
-                              <CardDescription>The product advantage.</CardDescription>
+                              <CardDescription className="text-gray-400">The product advantage.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-3">
                               {[
