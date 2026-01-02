@@ -508,7 +508,7 @@ function LoadingGrid() {
 export default function App() {
   const { user, loading: authLoading, logout } = useAuth();
   
-  const [username, setUsername] = useState("remembermyname");
+  const [username, setUsername] = useState("");
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
