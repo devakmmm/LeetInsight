@@ -50,10 +50,9 @@ import {
   CalendarClock,
   LogOut,
 } from "lucide-react";
-import { AdBanner } from "@/components/AdBanner";
+import { AdBanner } from "@/components/AdBanner"; // Disabled for growth phase
 import { AuthPage } from "@/components/AuthPage";
-import { PricingModal } from "@/components/PricingModal";
-import { TIERS } from "@/lib/tiers";
+import { PricingModal } from "@/components/PricingModal"; // Disabled for growth phase
 import { useAuth } from "@/lib/AuthContext";
 
 // ----------------------------
@@ -317,16 +316,15 @@ export default function App() {
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showAd, setShowAd] = useState(true);
-  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [showAd, setShowAd] = useState(false); // Disabled for growth phase
+  const [showPricingModal, setShowPricingModal] = useState(false); // Disabled for growth phase
 
   const [insights, setInsights] = useState(null);
   const [dashboard, setDashboard] = useState(null);
   const [history, setHistory] = useState(null);
   
-  // Get tier from user
-  const userTier = user?.tier || TIERS.FREE;
-  const showAds = userTier === TIERS.FREE;
+  // Growth phase: Everyone gets full access, no tier restrictions
+  const showAds = false; // Disabled - monetization coming later
 
   // Show auth page if not logged in
   if (authLoading) {
@@ -431,18 +429,19 @@ export default function App() {
         <AmbientAccents />
 
         <div className="relative mx-auto max-w-6xl px-4 py-10 md:py-14">
-          {/* Ad Banner for Free Tier */}
+          {/* Ad Banner disabled - focusing on growth before monetization */}
+          {/* 
           {showAds && showAd && (
             <AdBanner onClose={() => setShowAd(false)} onUpgradeClick={() => setShowPricingModal(true)} />
           )}
 
-          {/* Pricing Modal */}
           {showPricingModal && (
             <PricingModal onClose={() => setShowPricingModal(false)} onPaymentSuccess={() => {
               setShowPricingModal(false);
               setShowAd(false);
             }} />
           )}
+          */}
 
           {/* Header */}
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
