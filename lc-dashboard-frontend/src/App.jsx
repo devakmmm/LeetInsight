@@ -49,11 +49,15 @@ import {
   ArrowUpRight,
   CalendarClock,
   LogOut,
+  Linkedin,
+  Github,
+  Crown,
 } from "lucide-react";
 //import { AdBanner } from "@/components/AdBanner"; // Disabled for growth phase
 import { AuthPage } from "@/components/AuthPage";
 //import { PricingModal } from "@/components/PricingModal"; // Disabled for growth phase
 import { StreakDisplay } from "@/components/StreakDisplay";
+import { PremiumComingSoon } from "@/components/PremiumComingSoon";
 import { useAuth } from "@/lib/AuthContext";
 
 // ----------------------------
@@ -967,17 +971,67 @@ export default function App() {
             </AnimatePresence>
           </div>
 
-          <footer className="mt-10 border-t pt-6 text-xs text-muted-foreground">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div>
-                Built for trajectory: velocity, breadth, leverage coverage, and explainable recommendations.
+          {/* Premium Coming Soon Section */}
+          <div className="mt-10">
+            <PremiumComingSoon />
+          </div>
+
+          <footer className="mt-10 border-t border-white/10 pt-8 pb-4">
+            <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-400 to-emerald-500">
+                    <BarChart3 className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="font-bold text-foreground">LeetSight</span>
+                </div>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Built for trajectory: velocity, breadth, leverage coverage, and explainable recommendations.
+                  Make your LeetCode practice measurable, not just countable.
+                </p>
+                <div className="flex items-center gap-4">
+                  <a
+                    href="http://www.linkedin.com/in/devak-mehta"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Linkedin className="h-5 w-5" />
+                    <span className="text-sm">Connect with me</span>
+                  </a>
+                  <a
+                    href="https://github.com/devakmmm/LeetInsight"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Github className="h-5 w-5" />
+                    <span className="text-sm">Star on GitHub</span>
+                  </a>
+                </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <MiniTag>React</MiniTag>
-                <MiniTag>Tailwind</MiniTag>
-                <MiniTag>shadcn/ui</MiniTag>
-                <MiniTag>Framer Motion</MiniTag>
-                <MiniTag>Recharts</MiniTag>
+              <div className="flex flex-col items-start md:items-end gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <MiniTag>React</MiniTag>
+                  <MiniTag>Tailwind</MiniTag>
+                  <MiniTag>shadcn/ui</MiniTag>
+                  <MiniTag>Framer Motion</MiniTag>
+                  <MiniTag>Recharts</MiniTag>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Made with ❤️ by{" "}
+                  <a
+                    href="http://www.linkedin.com/in/devak-mehta"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-400 hover:underline"
+                  >
+                    Devak Mehta
+                  </a>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  © {new Date().getFullYear()} LeetSight. All rights reserved.
+                </p>
               </div>
             </div>
           </footer>
