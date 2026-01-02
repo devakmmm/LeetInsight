@@ -8,15 +8,15 @@ export const StreakDisplay = memo(function StreakDisplay({ streak }) {
     <div
       className={`rounded-2xl p-6 border backdrop-blur-xl transition-all ${
         isOnStreak
-          ? "bg-orange-500/10 border-orange-500/30"
-          : "bg-white/[0.03] border-white/10"
+          ? "bg-orange-500/20 border-orange-500/30"
+          : "bg-black/60 border-white/10"
       }`}
     >
       <div className="flex items-center gap-4">
         <div className={`h-16 w-16 rounded-xl flex items-center justify-center ${
           isOnStreak 
-            ? "bg-orange-500/20 border border-orange-500/30"
-            : "bg-white/[0.05] border border-white/10"
+            ? "bg-orange-500/30 border border-orange-500/40"
+            : "bg-black/40 border border-white/10"
         }`}>
           {isOnStreak ? (
             <Flame className="h-8 w-8 text-orange-400 fill-orange-400 animate-pulse drop-shadow-lg" />

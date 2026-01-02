@@ -181,8 +181,8 @@ const GlowCard = memo(function GlowCard({ children, className, glowColor = "emer
   return (
     <div
       className={cx(
-        "group relative rounded-2xl border bg-white/[0.03] p-4 backdrop-blur-xl",
-        "hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300",
+        "group relative rounded-2xl border bg-black/60 p-4 backdrop-blur-xl",
+        "hover:bg-black/70 hover:border-white/20 transition-all duration-300",
         borderColors[glowColor],
         glowColors[glowColor],
         className
@@ -309,7 +309,7 @@ const MiniTag = memo(function MiniTag({ children }) {
 
 const EmptyState = memo(function EmptyState({ title, subtitle, action }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center backdrop-blur-xl">
+    <div className="rounded-2xl border border-white/10 bg-black/60 p-8 text-center backdrop-blur-xl">
       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10">
         <Gauge className="h-6 w-6 text-emerald-400" />
       </div>
@@ -342,7 +342,7 @@ function LoadingGrid() {
   return (
     <div className="grid gap-4 md:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl">
+        <div key={i} className="rounded-2xl border border-white/10 bg-black/60 p-4 backdrop-blur-xl">
           <Skeleton className="h-4 w-28 bg-white/10" />
           <Skeleton className="mt-3 h-7 w-20 bg-white/10" />
           <Skeleton className="mt-2 h-3 w-44 bg-white/10" />
@@ -611,7 +611,7 @@ export default function App() {
                   <div className="h-2 w-2 rounded-full bg-emerald-400 mr-2 animate-pulse shadow-lg shadow-emerald-400/50" />
                   Connected
                 </Badge>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/10">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 border border-white/10">
                   <span className="text-xs text-gray-400">{user.email}</span>
                   <button
                     onClick={logout}
@@ -630,12 +630,12 @@ export default function App() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter your LeetCode username..."
-                  className="h-12 bg-white/[0.05] border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors rounded-xl text-white placeholder:text-gray-500"
+                  className="h-12 bg-black/50 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors rounded-xl text-white placeholder:text-gray-500"
                 />
               </div>
               <div className="md:w-40">
                 <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
-                  <SelectTrigger className="h-12 bg-white/[0.05] border-white/10 rounded-xl text-white">
+                  <SelectTrigger className="h-12 bg-black/50 border-white/10 rounded-xl text-white">
                     <SelectValue placeholder="Time Window" />
                   </SelectTrigger>
                   <SelectContent>
@@ -743,7 +743,7 @@ export default function App() {
                   {/* Tabs - Enhanced */}
                   <div className="mt-8">
                     <Tabs defaultValue="overview" className="w-full">
-                      <TabsList className="rounded-2xl border border-white/10 bg-white/[0.03] p-1.5 backdrop-blur-xl">
+                      <TabsList className="rounded-2xl border border-white/10 bg-black/60 p-1.5 backdrop-blur-xl">
                         <TabsTrigger value="overview" className="rounded-xl text-gray-400 data-[state=active]:text-emerald-400 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-emerald-500/30">
                           <Gauge className="h-4 w-4 mr-2" />
                           Overview
