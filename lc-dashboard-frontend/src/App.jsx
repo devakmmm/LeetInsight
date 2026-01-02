@@ -56,6 +56,7 @@ import {
   Brain,
   Rocket,
   ChevronRight,
+  Users,
 } from "lucide-react";
 //import { AdBanner } from "@/components/AdBanner"; // Disabled for growth phase
 import { AuthPage } from "@/components/AuthPage";
@@ -64,6 +65,14 @@ import { StreakDisplay } from "@/components/StreakDisplay";
 import { PremiumComingSoon } from "@/components/PremiumComingSoon";
 import { useAuth } from "@/lib/AuthContext";
 import { BackgroundBeams } from "@/components/ui/background-beams";
+import {
+  CreateLeaderboardModal,
+  JoinLeaderboardModal,
+  PrivateLeaderboardView,
+  MyLeaderboardsList,
+} from "@/components/PrivateLeaderboard";
+import { GoalsPanel } from "@/components/GoalSetting";
+import { EmailCaptureBanner, EmailCaptureModal } from "@/components/EmailCapture";
 
 // ----------------------------
 // CONFIG
@@ -511,6 +520,12 @@ export default function App() {
   const [leaderboardRank, setLeaderboardRank] = useState(null);
   const [leaderboardStats, setLeaderboardStats] = useState(null);
   
+  // Private Leaderboards & Goals state
+  const [showCreateLeaderboard, setShowCreateLeaderboard] = useState(false);
+  const [showJoinLeaderboard, setShowJoinLeaderboard] = useState(false);
+  const [viewLeaderboardCode, setViewLeaderboardCode] = useState(null);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  
   // Growth phase: Everyone gets full access, no tier restrictions
   const showAds = false; // Disabled - monetization coming later
 
@@ -913,6 +928,10 @@ export default function App() {
                           <Activity className="h-4 w-4 mr-2" />
                           Activity
                         </TabsTrigger>
+                        <TabsTrigger value="community" className="rounded-xl text-gray-400 data-[state=active]:text-fuchsia-400 data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500/20 data-[state=active]:to-purple-500/20">
+                          <Users className="h-4 w-4 mr-2" />
+                          Community
+                        </TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="overview" className="mt-6">
@@ -1264,6 +1283,35 @@ export default function App() {
                           </GlowCard>
                         </div>
                       </TabsContent>
+
+                      <TabsContent value="community" className="mt-6">
+                        <div className="grid gap-6 lg:grid-cols-2">
+                          {/* Private Leaderboards */}
+                          <GlowCard className="p-6" glowColor="purple">
+                            <MyLeaderboardsList
+                              username={username}
+                              onSelect={(code) => setViewLeaderboardCode(code)}
+                              onCreate={() => setShowCreateLeaderboard(true)}
+                              onJoin={() => setShowJoinLeaderboard(true)}
+                            />
+                          </GlowCard>
+
+                          {/* Goals Panel */}
+                          <GlowCard className="p-6" glowColor="cyan">
+                            <GoalsPanel
+                              username={username}
+                              userStats={solved}
+                            />
+                          </GlowCard>
+
+                          {/* Email Capture */}
+                          <GlowCard className="lg:col-span-2 p-0" glowColor="emerald">
+                            <div className="p-6">
+                              <EmailCaptureBanner source="community-tab" variant="full" />
+                            </div>
+                          </GlowCard>
+                        </div>
+                      </TabsContent>
                     </Tabs>
                   </div>
                 </motion.div>
@@ -1348,6 +1396,40 @@ export default function App() {
           </footer>
         </div> 
       </div> 
+
+      {/* Modals for Private Leaderboards */}
+      <CreateLeaderboardModal
+        isOpen={showCreateLeaderboard}
+        onClose={() => setShowCreateLeaderboard(false)}
+        username={username}
+        onCreated={(lb) => {
+          setShowCreateLeaderboard(false);
+          setViewLeaderboardCode(lb.inviteCode);
+        }}
+      />
+
+      <JoinLeaderboardModal
+        isOpen={showJoinLeaderboard}
+        onClose={() => setShowJoinLeaderboard(false)}
+        username={username}
+        onJoined={(code) => {
+          setShowJoinLeaderboard(false);
+          setViewLeaderboardCode(code);
+        }}
+      />
+
+      {viewLeaderboardCode && (
+        <PrivateLeaderboardView
+          code={viewLeaderboardCode}
+          onClose={() => setViewLeaderboardCode(null)}
+        />
+      )}
+
+      <EmailCaptureModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        source="modal"
+      />
     </div>
   );
 }

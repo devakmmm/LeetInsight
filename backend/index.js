@@ -79,6 +79,52 @@ async function runMigrations() {
       );
       CREATE INDEX IF NOT EXISTS idx_leaderboard_solved ON leaderboard_users(total_solved DESC);
       CREATE INDEX IF NOT EXISTS idx_leaderboard_tier ON leaderboard_users(tier);
+      
+      -- Email subscribers
+      CREATE TABLE IF NOT EXISTS email_subscribers (
+        id BIGSERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        lc_username TEXT,
+        source TEXT DEFAULT 'waitlist',
+        subscribed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        unsubscribed_at TIMESTAMPTZ
+      );
+      
+      -- Private Leaderboards
+      CREATE TABLE IF NOT EXISTS private_leaderboards (
+        id BIGSERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        invite_code TEXT UNIQUE NOT NULL,
+        created_by_email TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      
+      CREATE TABLE IF NOT EXISTS private_leaderboard_members (
+        id BIGSERIAL PRIMARY KEY,
+        leaderboard_id BIGINT NOT NULL REFERENCES private_leaderboards(id) ON DELETE CASCADE,
+        lc_username TEXT NOT NULL,
+        nickname TEXT,
+        joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(leaderboard_id, lc_username)
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_private_lb_code ON private_leaderboards(invite_code);
+      CREATE INDEX IF NOT EXISTS idx_private_lb_members ON private_leaderboard_members(leaderboard_id);
+      
+      -- User Goals
+      CREATE TABLE IF NOT EXISTS user_goals (
+        id BIGSERIAL PRIMARY KEY,
+        lc_username TEXT NOT NULL,
+        goal_type TEXT NOT NULL,
+        target_value INT NOT NULL,
+        current_value INT DEFAULT 0,
+        period TEXT DEFAULT 'weekly',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(lc_username, goal_type)
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_user_goals_username ON user_goals(lc_username);
     `);
     console.log("✅ Database migrations completed");
   } catch (err) {
@@ -979,6 +1025,329 @@ app.get("/api/leaderboard/rank/:username", async (req, res) => {
         percentile: Math.round((1 - rank / totalUsers) * 100)
       }
     });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ==================== EMAIL CAPTURE ====================
+
+// Subscribe email
+app.post("/api/subscribe", async (req, res) => {
+  try {
+    const { email, lcUsername, source = "waitlist" } = req.body;
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ ok: false, error: "Valid email required" });
+    }
+    
+    await dbQuery(
+      `INSERT INTO email_subscribers (email, lc_username, source)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (email) DO UPDATE SET
+         lc_username = COALESCE(EXCLUDED.lc_username, email_subscribers.lc_username),
+         source = EXCLUDED.source`,
+      [email.toLowerCase().trim(), lcUsername?.toLowerCase()?.trim() || null, source]
+    );
+    
+    res.json({ ok: true, message: "Subscribed successfully!" });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Get subscriber count (for social proof)
+app.get("/api/subscribe/count", async (req, res) => {
+  try {
+    const result = await dbQuery(`SELECT COUNT(*) as count FROM email_subscribers WHERE unsubscribed_at IS NULL`);
+    res.json({ ok: true, count: parseInt(result.rows[0].count) });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ==================== PRIVATE LEADERBOARDS ====================
+
+// Generate random invite code
+function generateInviteCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+// Create private leaderboard
+app.post("/api/private-leaderboards", async (req, res) => {
+  try {
+    const { name, creatorEmail, creatorUsername } = req.body;
+    if (!name || name.length < 2) {
+      return res.status(400).json({ ok: false, error: "Leaderboard name required (min 2 chars)" });
+    }
+    
+    const inviteCode = generateInviteCode();
+    
+    const result = await dbQuery(
+      `INSERT INTO private_leaderboards (name, invite_code, created_by_email)
+       VALUES ($1, $2, $3)
+       RETURNING id, name, invite_code, created_at`,
+      [name.trim(), inviteCode, creatorEmail?.toLowerCase()?.trim() || null]
+    );
+    
+    const leaderboard = result.rows[0];
+    
+    // Auto-join creator if username provided
+    if (creatorUsername) {
+      await dbQuery(
+        `INSERT INTO private_leaderboard_members (leaderboard_id, lc_username, nickname)
+         VALUES ($1, $2, $3)
+         ON CONFLICT DO NOTHING`,
+        [leaderboard.id, creatorUsername.toLowerCase().trim(), null]
+      );
+    }
+    
+    res.json({
+      ok: true,
+      data: {
+        id: leaderboard.id,
+        name: leaderboard.name,
+        inviteCode: leaderboard.invite_code,
+        inviteLink: `https://leetsight.netlify.app/join/${leaderboard.invite_code}`,
+        createdAt: leaderboard.created_at
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Get leaderboard by invite code
+app.get("/api/private-leaderboards/:code", async (req, res) => {
+  try {
+    const code = (req.params.code || "").trim().toUpperCase();
+    if (!code) return res.status(400).json({ ok: false, error: "Invite code required" });
+    
+    const lbResult = await dbQuery(
+      `SELECT id, name, invite_code, created_at FROM private_leaderboards WHERE invite_code = $1`,
+      [code]
+    );
+    
+    if (lbResult.rows.length === 0) {
+      return res.status(404).json({ ok: false, error: "Leaderboard not found" });
+    }
+    
+    const lb = lbResult.rows[0];
+    
+    // Get members with their stats from leaderboard_users
+    const membersResult = await dbQuery(
+      `SELECT 
+         m.lc_username, 
+         m.nickname, 
+         m.joined_at,
+         COALESCE(lu.total_solved, 0) as total_solved,
+         COALESCE(lu.solved_easy, 0) as solved_easy,
+         COALESCE(lu.solved_medium, 0) as solved_medium,
+         COALESCE(lu.solved_hard, 0) as solved_hard,
+         COALESCE(lu.tier, 'Bronze') as tier
+       FROM private_leaderboard_members m
+       LEFT JOIN leaderboard_users lu ON LOWER(m.lc_username) = LOWER(lu.username)
+       WHERE m.leaderboard_id = $1
+       ORDER BY COALESCE(lu.total_solved, 0) DESC`,
+      [lb.id]
+    );
+    
+    res.json({
+      ok: true,
+      data: {
+        id: lb.id,
+        name: lb.name,
+        inviteCode: lb.invite_code,
+        createdAt: lb.created_at,
+        memberCount: membersResult.rows.length,
+        members: membersResult.rows.map((m, idx) => ({
+          rank: idx + 1,
+          username: m.lc_username,
+          nickname: m.nickname,
+          totalSolved: m.total_solved,
+          easy: m.solved_easy,
+          medium: m.solved_medium,
+          hard: m.solved_hard,
+          tier: m.tier,
+          joinedAt: m.joined_at
+        }))
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Join a private leaderboard
+app.post("/api/private-leaderboards/:code/join", async (req, res) => {
+  try {
+    const code = (req.params.code || "").trim().toUpperCase();
+    const { lcUsername, nickname } = req.body;
+    
+    if (!code) return res.status(400).json({ ok: false, error: "Invite code required" });
+    if (!lcUsername) return res.status(400).json({ ok: false, error: "LeetCode username required" });
+    
+    // Find leaderboard
+    const lbResult = await dbQuery(
+      `SELECT id, name FROM private_leaderboards WHERE invite_code = $1`,
+      [code]
+    );
+    
+    if (lbResult.rows.length === 0) {
+      return res.status(404).json({ ok: false, error: "Leaderboard not found" });
+    }
+    
+    const lb = lbResult.rows[0];
+    
+    // Add member
+    await dbQuery(
+      `INSERT INTO private_leaderboard_members (leaderboard_id, lc_username, nickname)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (leaderboard_id, lc_username) DO UPDATE SET nickname = EXCLUDED.nickname`,
+      [lb.id, lcUsername.toLowerCase().trim(), nickname?.trim() || null]
+    );
+    
+    // Also ensure user is in leaderboard_users (fetch their stats)
+    try {
+      const profile = await fetchUserProfile(lcUsername);
+      if (profile) {
+        await upsertLeaderboardUser(lcUsername, profile);
+      }
+    } catch (e) {
+      // Non-fatal, user might not exist on LeetCode
+    }
+    
+    res.json({ ok: true, message: `Joined "${lb.name}" successfully!` });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Get leaderboards for a user
+app.get("/api/private-leaderboards/user/:username", async (req, res) => {
+  try {
+    const username = (req.params.username || "").trim().toLowerCase();
+    if (!username) return res.status(400).json({ ok: false, error: "Username required" });
+    
+    const result = await dbQuery(
+      `SELECT pl.id, pl.name, pl.invite_code, pl.created_at,
+              (SELECT COUNT(*) FROM private_leaderboard_members WHERE leaderboard_id = pl.id) as member_count
+       FROM private_leaderboards pl
+       INNER JOIN private_leaderboard_members plm ON pl.id = plm.leaderboard_id
+       WHERE LOWER(plm.lc_username) = $1
+       ORDER BY pl.created_at DESC`,
+      [username]
+    );
+    
+    res.json({
+      ok: true,
+      data: result.rows.map(r => ({
+        id: r.id,
+        name: r.name,
+        inviteCode: r.invite_code,
+        memberCount: parseInt(r.member_count),
+        createdAt: r.created_at
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ==================== GOALS ====================
+
+// Set/update a goal
+app.post("/api/goals", async (req, res) => {
+  try {
+    const { lcUsername, goalType, targetValue, period = "weekly" } = req.body;
+    
+    if (!lcUsername) return res.status(400).json({ ok: false, error: "LeetCode username required" });
+    if (!goalType) return res.status(400).json({ ok: false, error: "Goal type required" });
+    if (!targetValue || targetValue < 1) return res.status(400).json({ ok: false, error: "Target value must be at least 1" });
+    
+    const validTypes = ['weekly_problems', 'weekly_hard', 'daily_streak', 'reach_tier', 'total_problems'];
+    if (!validTypes.includes(goalType)) {
+      return res.status(400).json({ ok: false, error: `Invalid goal type. Valid: ${validTypes.join(', ')}` });
+    }
+    
+    // Upsert goal (one goal per type per user)
+    const result = await dbQuery(
+      `INSERT INTO user_goals (lc_username, goal_type, target_value, period)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (lc_username, goal_type) DO UPDATE SET
+         target_value = EXCLUDED.target_value,
+         period = EXCLUDED.period,
+         updated_at = NOW()
+       RETURNING id, goal_type, target_value, current_value, period`,
+      [lcUsername.toLowerCase().trim(), goalType, targetValue, period]
+    );
+    
+    res.json({ ok: true, data: result.rows[0] });
+  } catch (err) {
+    // Handle unique constraint differently - might need a composite unique index
+    if (err.message.includes('duplicate') || err.message.includes('unique')) {
+      // Fallback: just update
+      try {
+        const { lcUsername, goalType, targetValue, period = "weekly" } = req.body;
+        await dbQuery(
+          `UPDATE user_goals SET target_value = $1, period = $2, updated_at = NOW()
+           WHERE lc_username = $3 AND goal_type = $4`,
+          [targetValue, period, lcUsername.toLowerCase().trim(), goalType]
+        );
+        res.json({ ok: true, message: "Goal updated" });
+      } catch (e2) {
+        res.status(500).json({ ok: false, error: e2.message });
+      }
+    } else {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+});
+
+// Get goals for a user
+app.get("/api/goals/:username", async (req, res) => {
+  try {
+    const username = (req.params.username || "").trim().toLowerCase();
+    if (!username) return res.status(400).json({ ok: false, error: "Username required" });
+    
+    const result = await dbQuery(
+      `SELECT id, goal_type, target_value, current_value, period, created_at, updated_at
+       FROM user_goals
+       WHERE lc_username = $1
+       ORDER BY created_at DESC`,
+      [username]
+    );
+    
+    res.json({
+      ok: true,
+      data: result.rows.map(r => ({
+        id: r.id,
+        goalType: r.goal_type,
+        targetValue: r.target_value,
+        currentValue: r.current_value,
+        period: r.period,
+        progress: Math.min(100, Math.round((r.current_value / r.target_value) * 100)),
+        createdAt: r.created_at,
+        updatedAt: r.updated_at
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Delete a goal
+app.delete("/api/goals/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (!id) return res.status(400).json({ ok: false, error: "Goal ID required" });
+    
+    await dbQuery(`DELETE FROM user_goals WHERE id = $1`, [id]);
+    res.json({ ok: true, message: "Goal deleted" });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }

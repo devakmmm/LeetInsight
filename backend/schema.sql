@@ -53,3 +53,48 @@ CREATE TABLE IF NOT EXISTS leaderboard_users (
 
 CREATE INDEX IF NOT EXISTS idx_leaderboard_solved ON leaderboard_users(total_solved DESC);
 CREATE INDEX IF NOT EXISTS idx_leaderboard_tier ON leaderboard_users(tier);
+
+-- Email waitlist / capture
+CREATE TABLE IF NOT EXISTS email_subscribers (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  lc_username TEXT,
+  source TEXT DEFAULT 'waitlist', -- 'waitlist', 'weekly_report', 'streak_reminder'
+  subscribed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  unsubscribed_at TIMESTAMPTZ
+);
+
+-- Private Leaderboards
+CREATE TABLE IF NOT EXISTS private_leaderboards (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  invite_code TEXT UNIQUE NOT NULL,
+  created_by_email TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS private_leaderboard_members (
+  id BIGSERIAL PRIMARY KEY,
+  leaderboard_id BIGINT NOT NULL REFERENCES private_leaderboards(id) ON DELETE CASCADE,
+  lc_username TEXT NOT NULL,
+  nickname TEXT,
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(leaderboard_id, lc_username)
+);
+
+CREATE INDEX IF NOT EXISTS idx_private_lb_code ON private_leaderboards(invite_code);
+CREATE INDEX IF NOT EXISTS idx_private_lb_members ON private_leaderboard_members(leaderboard_id);
+
+-- User Goals
+CREATE TABLE IF NOT EXISTS user_goals (
+  id BIGSERIAL PRIMARY KEY,
+  lc_username TEXT NOT NULL,
+  goal_type TEXT NOT NULL, -- 'weekly_problems', 'weekly_hard', 'daily_streak', 'reach_tier'
+  target_value INT NOT NULL,
+  current_value INT DEFAULT 0,
+  period TEXT DEFAULT 'weekly', -- 'daily', 'weekly', 'monthly', 'total'
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_goals_username ON user_goals(lc_username);
