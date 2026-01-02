@@ -491,7 +491,6 @@ export default function App() {
               <Badge variant="secondary" className="rounded-full">
                 Render-ready
               </Badge>
-              </div>
 
               <div className="flex flex-col gap-2 md:flex-row">
                 <div className="flex-1">
