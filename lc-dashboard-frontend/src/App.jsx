@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LineChart,
@@ -105,82 +105,69 @@ function readinessTone(score) {
 }
 
 // ----------------------------
-// Animated background accents (Enhanced for SaaS look)
+// Animated background accents (Optimized with CSS animations)
 // ----------------------------
-function AmbientAccents() {
+const AmbientAccents = memo(function AmbientAccents() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      {/* Gradient Orbs */}
-      <motion.div
-        className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full blur-3xl opacity-20"
+      <style>{`
+        @keyframes float1 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(30px, 20px) scale(1.05); }
+        }
+        @keyframes float2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-20px, -15px) scale(0.95); }
+        }
+        .orb-1 { animation: float1 20s ease-in-out infinite; }
+        .orb-2 { animation: float2 25s ease-in-out infinite; }
+      `}</style>
+      {/* Gradient Orbs - CSS animations instead of JS */}
+      <div
+        className="orb-1 absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full blur-3xl opacity-20"
         style={{ background: "radial-gradient(circle at 30% 30%, #3b82f6, transparent 50%)" }}
-        animate={{
-          x: [0, 50, -20, 0],
-          y: [0, 30, 20, 0],
-          scale: [1, 1.1, 0.95, 1],
-        }}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
       />
-      <motion.div
-        className="absolute -bottom-44 -right-44 h-[700px] w-[700px] rounded-full blur-3xl opacity-15"
+      <div
+        className="orb-2 absolute -bottom-44 -right-44 h-[700px] w-[700px] rounded-full blur-3xl opacity-15"
         style={{ background: "radial-gradient(circle at 70% 70%, #8b5cf6, transparent 50%)" }}
-        animate={{
-          x: [0, -30, 20, 0],
-          y: [0, -20, 35, 0],
-          scale: [1, 0.9, 1.1, 1],
-        }}
-        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full blur-3xl opacity-10"
-        style={{ background: "radial-gradient(circle, #06b6d4, transparent 50%)" }}
-        animate={{
-          scale: [1, 1.2, 0.8, 1],
-        }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
       />
       
-      {/* Grid Pattern */}
-      <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:24px_24px]" />
+      {/* Grid Pattern - Static */}
+      <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:24px_24px]" />
       
-      {/* Gradient Lines */}
+      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/50" />
     </div>
   );
-}
+});
 
 // ----------------------------
-// Reusable components (Enhanced SaaS styling)
+// Reusable components (Optimized - no motion animations)
 // ----------------------------
-function GlowCard({ children, className, glowColor = "blue" }) {
+const GlowCard = memo(function GlowCard({ children, className, glowColor = "blue" }) {
   const glowColors = {
-    blue: "group-hover:shadow-blue-500/20",
-    purple: "group-hover:shadow-purple-500/20",
-    cyan: "group-hover:shadow-cyan-500/20",
-    green: "group-hover:shadow-green-500/20",
-    orange: "group-hover:shadow-orange-500/20",
+    blue: "hover:shadow-blue-500/20",
+    purple: "hover:shadow-purple-500/20",
+    cyan: "hover:shadow-cyan-500/20",
+    green: "hover:shadow-green-500/20",
+    orange: "hover:shadow-orange-500/20",
   };
   
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
+    <div
       className={cx(
         "group relative rounded-2xl border border-white/10 bg-gradient-to-br from-background/80 to-background/40 p-4 shadow-lg backdrop-blur-xl",
-        "hover:border-white/20 hover:shadow-2xl transition-all duration-300",
+        "hover:border-white/20 hover:shadow-2xl transition-all duration-200",
         glowColors[glowColor],
         className
       )}
     >
-      {/* Subtle gradient border effect */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       <div className="relative z-10">{children}</div>
-    </motion.div>
+    </div>
   );
-}
+});
 
-function Metric({ title, value, sub, icon: Icon, right, color = "blue" }) {
+const Metric = memo(function Metric({ title, value, sub, icon: Icon, right, color = "blue" }) {
   const iconBgColors = {
     blue: "from-blue-500/20 to-cyan-500/10",
     purple: "from-purple-500/20 to-pink-500/10",
@@ -204,14 +191,9 @@ function Metric({ title, value, sub, icon: Icon, right, color = "blue" }) {
             <span className="truncate font-medium">{title}</span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <motion.div 
-              className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
+            <div className="text-3xl font-bold tracking-tight">
               {value}
-            </motion.div>
+            </div>
             {right && (
               <div className="text-sm text-muted-foreground font-medium">{right}</div>
             )}
@@ -229,9 +211,9 @@ function Metric({ title, value, sub, icon: Icon, right, color = "blue" }) {
       </div>
     </GlowCard>
   );
-}
+});
 
-function ProgressRing({ value, label }) {
+const ProgressRing = memo(function ProgressRing({ value, label }) {
   const v = clamp(value, 0, 100);
   const radius = 38;
   const stroke = 8;
@@ -251,7 +233,7 @@ function ProgressRing({ value, label }) {
             className="text-border"
             strokeWidth={stroke}
           />
-          <motion.circle
+          <circle
             cx="50"
             cy="50"
             r={radius}
@@ -261,9 +243,8 @@ function ProgressRing({ value, label }) {
             strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={c}
-            initial={{ strokeDashoffset: c }}
-            animate={{ strokeDashoffset: offset }}
-            transition={{ duration: 0.8, ease: "easeInOut" }}
+            strokeDashoffset={offset}
+            style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -277,17 +258,17 @@ function ProgressRing({ value, label }) {
       </div>
     </div>
   );
-}
+});
 
-function MiniTag({ children }) {
+const MiniTag = memo(function MiniTag({ children }) {
   return (
     <span className="inline-flex items-center rounded-full border bg-background/70 px-2 py-1 text-xs text-muted-foreground">
       {children}
     </span>
   );
-}
+});
 
-function EmptyState({ title, subtitle, action }) {
+const EmptyState = memo(function EmptyState({ title, subtitle, action }) {
   return (
     <div className="rounded-2xl border bg-background/60 p-8 text-center shadow-sm backdrop-blur">
       <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border bg-background/70">
@@ -298,72 +279,25 @@ function EmptyState({ title, subtitle, action }) {
       {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
     </div>
   );
-}
+});
 
-function ReadinessFlip({ readiness, tone }) {
-  const [isFlipped, setIsFlipped] = useState(false);
-
+// Simplified ReadinessFlip - removed flip animation for performance
+const ReadinessFlip = memo(function ReadinessFlip({ readiness, tone }) {
   return (
-    <motion.div
-      className="relative h-full"
-      onMouseEnter={() => setIsFlipped(true)}
-      onMouseLeave={() => setIsFlipped(false)}
-      style={{ perspective: "1000px" }}
-    >
-      <motion.div
-        className="w-full h-full"
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ duration: 0.6, type: "spring", stiffness: 100, damping: 15 }}
-        style={{ transformStyle: "preserve-3d" }}
-      >
-        {/* Front */}
-        <div
-          style={{ backfaceVisibility: "hidden" }}
-          className="w-full"
-        >
-          <Card className="rounded-2xl border bg-background shadow-sm h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <tone.icon className="h-4 w-4" />
-                Readiness
-              </CardTitle>
-              <CardDescription>{tone.hint}</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <ProgressRing value={readiness?.final ?? 0} label={tone.label} />
-              <div className="mt-4 text-center text-xs text-muted-foreground">Hover to learn more</div>
-            </CardContent>
-          </Card>
+    <GlowCard glowColor="blue">
+      <div className="flex items-center gap-4">
+        <ProgressRing value={readiness?.composite ?? 0} label={tone.label} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <tone.icon className="h-5 w-5 text-blue-400" />
+            <span className="font-semibold">{tone.label}</span>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">{tone.hint}</p>
         </div>
-
-        {/* Back */}
-        <motion.div
-          style={{ backfaceVisibility: "hidden", rotateY: 180 }}
-          className="w-full absolute inset-0"
-        >
-          <Card className="rounded-2xl border bg-background shadow-sm h-full">
-            <CardHeader>
-              <CardTitle className="text-base">What this means</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-xs text-muted-foreground space-y-2">
-                <p>
-                  A weighted blend of velocity, breadth, interview-leverage coverage, and hard exposure—penalized for inactivity.
-                </p>
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <MiniTag>Velocity</MiniTag>
-                  <MiniTag>Breadth</MiniTag>
-                  <MiniTag>Leverage</MiniTag>
-                  <MiniTag>Hard%</MiniTag>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </GlowCard>
   );
-}
+});
 
 function LoadingGrid() {
   return (
@@ -806,11 +740,8 @@ export default function App() {
                                 {Object.entries(readiness?.components || {}).map(([k, v], i) => {
                                   const colors = ["from-blue-500/10 to-cyan-500/5", "from-purple-500/10 to-pink-500/5", "from-green-500/10 to-emerald-500/5", "from-orange-500/10 to-yellow-500/5"];
                                   return (
-                                    <motion.div 
+                                    <div 
                                       key={k} 
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{ delay: i * 0.1 }}
                                       className={cx("rounded-xl border border-white/10 bg-gradient-to-br p-4", colors[i % colors.length])}
                                     >
                                       <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{k}</div>
@@ -818,7 +749,7 @@ export default function App() {
                                         <div className="text-2xl font-bold">{v}</div>
                                         <div className="text-xs text-muted-foreground/70">{k === "recencyFactor" ? "0–1" : "/ 100"}</div>
                                       </div>
-                                    </motion.div>
+                                    </div>
                                   );
                                 })}
                               </div>
@@ -850,12 +781,9 @@ export default function App() {
                                 { title: "Time series tracking", desc: "Daily snapshots let you measure velocity.", icon: TrendingUp, color: "blue" },
                                 { title: "Smart recommendations", desc: "Ranked by leverage × coverage gap.", icon: Target, color: "purple" },
                                 { title: "Explainable scoring", desc: "Transparent and decomposed.", icon: Gauge, color: "cyan" },
-                              ].map((item, i) => (
-                                <motion.div 
+                              ].map((item) => (
+                                <div 
                                   key={item.title}
-                                  initial={{ opacity: 0, x: -10 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: i * 0.1 }}
                                   className="group flex items-start gap-3 rounded-xl border border-white/10 bg-background/50 p-3 hover:bg-background/70 hover:border-white/20 transition-all cursor-default"
                                 >
                                   <div className={cx("h-8 w-8 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0",
@@ -873,7 +801,7 @@ export default function App() {
                                     <div className="font-medium text-sm text-foreground">{item.title}</div>
                                     <div className="text-xs text-muted-foreground mt-0.5">{item.desc}</div>
                                   </div>
-                                </motion.div>
+                                </div>
                               ))}
                             </CardContent>
                           </GlowCard>
@@ -968,12 +896,9 @@ export default function App() {
                             </CardHeader>
                             <CardContent className="space-y-3">
                               {nextTopics.length ? (
-                                nextTopics.map((t, i) => (
-                                  <motion.div
+                                nextTopics.map((t) => (
+                                  <div
                                     key={t.tagSlug}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.25, delay: i * 0.05 }}
                                     className="rounded-xl border border-white/10 bg-gradient-to-r from-background/60 to-background/40 p-4 hover:border-white/20 transition-all"
                                   >
                                     <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -1024,7 +949,7 @@ export default function App() {
                                     <div className="mt-3 rounded-xl border border-purple-500/20 bg-purple-500/5 p-3 text-xs">
                                       <span className="font-medium text-purple-400">Next action:</span> <span className="text-muted-foreground">{t.nextAction}</span>
                                     </div>
-                                  </motion.div>
+                                  </div>
                                 ))
                               ) : (
                                 <EmptyState
@@ -1086,11 +1011,8 @@ export default function App() {
                             <CardContent className="space-y-3">
                               {recentAccepted.length ? (
                                 recentAccepted.slice(0, 16).map((s, i) => (
-                                  <motion.div
+                                  <div
                                     key={`${s.slug}-${i}`}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.25, delay: i * 0.015 }}
                                     className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-gradient-to-r from-background/60 to-background/40 p-4 hover:border-white/20 transition-all"
                                   >
                                     <div className="min-w-0">
@@ -1108,7 +1030,7 @@ export default function App() {
                                       <ArrowUpRight className="mr-2 h-4 w-4" />
                                       Open
                                     </Button>
-                                  </motion.div>
+                                  </div>
                                 ))
                               ) : (
                                 <EmptyState

@@ -1,7 +1,6 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { memo } from "react";
 
-export function GlowingCard({ children, className = "", glowColor = "green" }) {
+export const GlowingCard = memo(function GlowingCard({ children, className = "", glowColor = "green" }) {
   const glowColors = {
     green: "from-green-500/20 to-emerald-500/20",
     purple: "from-purple-500/20 to-pink-500/20",
@@ -10,12 +9,7 @@ export function GlowingCard({ children, className = "", glowColor = "green" }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={`relative group ${className}`}
-    >
+    <div className={`relative group ${className}`}>
       {/* Glow effect */}
       <div
         className={`absolute -inset-0.5 bg-gradient-to-r ${glowColors[glowColor]} rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500`}
@@ -24,11 +18,11 @@ export function GlowingCard({ children, className = "", glowColor = "green" }) {
       <div className="relative rounded-2xl border border-white/10 bg-background/80 backdrop-blur-xl p-6">
         {children}
       </div>
-    </motion.div>
+    </div>
   );
-}
+});
 
-export function FloatingOrb({ color = "green", size = "lg", className = "" }) {
+export const FloatingOrb = memo(function FloatingOrb({ color = "green", size = "lg", className = "" }) {
   const sizes = {
     sm: "h-32 w-32",
     md: "h-64 w-64",
@@ -43,21 +37,14 @@ export function FloatingOrb({ color = "green", size = "lg", className = "" }) {
   };
 
   return (
-    <motion.div
-      className={`absolute rounded-full blur-3xl bg-gradient-to-br ${colors[color]} ${sizes[size]} ${className}`}
-      animate={{
-        x: [0, 30, -20, 0],
-        y: [0, -20, 30, 0],
-        scale: [1, 1.1, 0.95, 1],
-      }}
-      transition={{
-        duration: 20,
-        repeat: Infinity,
-        ease: "easeInOut",
+    <div
+      className={`absolute rounded-full blur-3xl bg-gradient-to-br ${colors[color]} ${sizes[size]} ${className} animate-float-slow`}
+      style={{
+        animation: 'float-slow 20s ease-in-out infinite',
       }}
     />
   );
-}
+});
 
 export function GridPattern() {
   return (
@@ -86,7 +73,7 @@ export function AnimatedBorder({ children, className = "" }) {
   );
 }
 
-export function StatCard({ label, value, subValue, icon: Icon, trend, color = "green" }) {
+export const StatCard = memo(function StatCard({ label, value, subValue, icon: Icon, trend, color = "green" }) {
   const colorClasses = {
     green: "from-green-500 to-emerald-500 text-green-400",
     blue: "from-blue-500 to-cyan-500 text-blue-400",
@@ -95,13 +82,7 @@ export function StatCard({ label, value, subValue, icon: Icon, trend, color = "g
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.02, y: -2 }}
-      transition={{ duration: 0.3 }}
-      className="relative group"
-    >
+    <div className="relative group hover:scale-[1.02] hover:-translate-y-0.5 transition-transform duration-300">
       <div className={`absolute -inset-0.5 bg-gradient-to-r ${colorClasses[color].split(" ")[0]} ${colorClasses[color].split(" ")[1]} rounded-2xl blur opacity-0 group-hover:opacity-30 transition duration-300`} />
       <div className="relative rounded-2xl border border-white/10 bg-background/60 backdrop-blur-xl p-5 overflow-hidden">
         {/* Background decoration */}
@@ -127,19 +108,15 @@ export function StatCard({ label, value, subValue, icon: Icon, trend, color = "g
           {subValue && <div className="text-sm text-muted-foreground mt-1">{subValue}</div>}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
-}
+});
 
 export function GlassNavbar({ children, className = "" }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`sticky top-4 z-50 mx-4 rounded-2xl border border-white/10 bg-background/60 backdrop-blur-xl shadow-2xl shadow-black/10 ${className}`}
-    >
+    <div className={`sticky top-4 z-50 mx-4 rounded-2xl border border-white/10 bg-background/60 backdrop-blur-xl shadow-2xl shadow-black/10 ${className}`}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 

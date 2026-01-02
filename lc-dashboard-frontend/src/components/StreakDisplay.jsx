@@ -1,14 +1,11 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { memo } from "react";
 import { Flame } from "lucide-react";
 
-export function StreakDisplay({ streak }) {
+export const StreakDisplay = memo(function StreakDisplay({ streak }) {
   const isOnStreak = streak > 0;
   
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+    <div
       className={`rounded-2xl p-6 border-2 transition-all ${
         isOnStreak
           ? "bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-400/50"
@@ -16,17 +13,13 @@ export function StreakDisplay({ streak }) {
       }`}
     >
       <div className="flex items-center gap-4">
-        <motion.div
-          animate={isOnStreak ? { scale: [1, 1.2, 1] } : {}}
-          transition={isOnStreak ? { repeat: Infinity, duration: 2 } : {}}
-          className="text-5xl"
-        >
+        <div className="text-5xl">
           {isOnStreak ? (
-            <Flame className="h-12 w-12 text-orange-500 fill-orange-500" />
+            <Flame className="h-12 w-12 text-orange-500 fill-orange-500 animate-pulse" />
           ) : (
             <span className="text-4xl">🎯</span>
           )}
-        </motion.div>
+        </div>
 
         <div className="flex-1">
           <div className="text-sm text-muted-foreground font-medium uppercase tracking-wider">
@@ -45,6 +38,6 @@ export function StreakDisplay({ streak }) {
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
-}
+});
