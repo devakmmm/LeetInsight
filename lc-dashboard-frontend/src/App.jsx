@@ -50,9 +50,10 @@ import {
   CalendarClock,
   LogOut,
 } from "lucide-react";
-import { AdBanner } from "@/components/AdBanner"; // Disabled for growth phase
+//import { AdBanner } from "@/components/AdBanner"; // Disabled for growth phase
 import { AuthPage } from "@/components/AuthPage";
-import { PricingModal } from "@/components/PricingModal"; // Disabled for growth phase
+//import { PricingModal } from "@/components/PricingModal"; // Disabled for growth phase
+import { StreakDisplay } from "@/components/StreakDisplay";
 import { useAuth } from "@/lib/AuthContext";
 
 // ----------------------------
@@ -68,7 +69,6 @@ const API_BASE = import.meta?.env?.VITE_API_BASE || "http://localhost:5050";
 function cx(...xs) {
   return xs.filter(Boolean).join(" ");
 }
-
 function fmtDate(isoOrTs) {
   const d = typeof isoOrTs === "number" ? new Date(isoOrTs * 1000) : new Date(isoOrTs);
   return d.toLocaleString(undefined, {
@@ -405,6 +405,41 @@ export default function App() {
   const nextTopics = insights?.recommendations?.nextTopics || [];
   const recentAccepted = dashboard?.recentAccepted || [];
 
+  // Calculate streak: consecutive days with snapshots
+  const streak = useMemo(() => {
+    const snaps = history?.snapshots || [];
+    if (snaps.length === 0) return 0;
+
+    // Sort by date descending (most recent first)
+    const sorted = [...snaps].sort(
+      (a, b) => new Date(b.capturedAt) - new Date(a.capturedAt)
+    );
+
+    let count = 0;
+    let currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
+    for (const snap of sorted) {
+      const snapDate = new Date(snap.capturedAt);
+      snapDate.setHours(0, 0, 0, 0);
+
+      const dayDiff = Math.floor(
+        (currentDate - snapDate) / (1000 * 60 * 60 * 24)
+      );
+
+      // If gap is more than 1 day, streak is broken
+      if (dayDiff > 1) break;
+      // If it's the current iteration's expected day, count it
+      if (dayDiff === count) {
+        count++;
+      } else {
+        break;
+      }
+    }
+
+    return count;
+  }, [history]);
+
   const historySeries = useMemo(() => {
     const snaps = history?.snapshots || [];
     return snaps.map((s) => ({
@@ -445,7 +480,7 @@ export default function App() {
 
           {/* Header */}
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-            <div>
+            <div className="flex-1 min-w-0">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -477,81 +512,80 @@ export default function App() {
                 with explainable recommendations.
               </motion.p>
             </div>
+            <div className="w-full md:w-[380px] flex-shrink-0">
+              <StreakDisplay streak={streak} />
+            </div>
+          </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.12 }}
-              className="flex flex-col gap-3 rounded-2xl border bg-background/60 p-4 shadow-sm backdrop-blur md:w-[420px]"
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-medium">Query</div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{user.email}</span>
-                  <button
-                    onClick={logout}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    title="Logout"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-              <Badge variant="secondary" className="rounded-full">
-                Render-ready
-              </Badge>
-
-              <div className="flex flex-col gap-2 md:flex-row">
-                <div className="flex-1">
-                  <Input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="LeetCode username"
-                    className="h-10"
-                  />
-                </div>
-                <div className="md:w-36">
-                  <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
-                    <SelectTrigger className="h-10">
-                      <SelectValue placeholder="Window" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="14">14 days</SelectItem>
-                      <SelectItem value="30">30 days</SelectItem>
-                      <SelectItem value="60">60 days</SelectItem>
-                      <SelectItem value="90">90 days</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => fetchAll(username, days)}
-                  className="h-10 flex-1 rounded-xl"
-                  disabled={loading}
+          {/* Query Card */}
+          <div className="mt-6 rounded-2xl border bg-background/60 p-4 shadow-sm backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium">Query</div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{user.email}</span>
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  title="Logout"
                 >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Refresh
-                </Button>
-                <Button
-                  onClick={takeSnapshot}
-                  variant="secondary"
-                  className="h-10 rounded-xl"
-                  disabled={loading}
-                  title="Stores a snapshot in Postgres"
-                >
-                  <CalendarClock className="mr-2 h-4 w-4" />
-                  Snapshot
-                </Button>
+                  <LogOut className="h-4 w-4" />
+                </button>
               </div>
+            </div>
+            <Badge variant="secondary" className="rounded-full mt-2">
+              Render-ready
+            </Badge>
 
-              {error ? (
-                <div className="rounded-xl border bg-background/70 p-3 text-xs text-destructive">
-                  {error}
-                </div>
-              ) : null}
-            </motion.div>
+            <div className="flex flex-col gap-2 md:flex-row mt-3">
+              <div className="flex-1">
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="LeetCode username"
+                  className="h-10"
+                />
+              </div>
+              <div className="md:w-36">
+                <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Window" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="14">14 days</SelectItem>
+                    <SelectItem value="30">30 days</SelectItem>
+                    <SelectItem value="60">60 days</SelectItem>
+                    <SelectItem value="90">90 days</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-2">
+              <Button
+                onClick={() => fetchAll(username, days)}
+                className="h-10 flex-1 rounded-xl"
+                disabled={loading}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
+              <Button
+                onClick={takeSnapshot}
+                variant="secondary"
+                className="h-10 rounded-xl"
+                disabled={loading}
+                title="Stores a snapshot in Postgres"
+              >
+                <CalendarClock className="mr-2 h-4 w-4" />
+                Snapshot
+              </Button>
+            </div>
+
+            {error ? (
+              <div className="rounded-xl border bg-background/70 p-3 text-xs text-destructive mt-2">
+                {error}
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-8">
@@ -944,8 +978,8 @@ export default function App() {
               </div>
             </div>
           </footer>
-        </div>
-      </div>
+        </div> 
+      </div> 
     </div>
   );
 }
