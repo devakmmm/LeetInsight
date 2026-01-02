@@ -489,8 +489,8 @@ export default function App() {
   // Show auth page if not logged in
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-gray-400">Loading...</div>
       </div>
     );
   }
@@ -508,7 +508,7 @@ export default function App() {
   const ToneIcon = tone.icon;
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden">
+    <div className="min-h-screen bg-black text-white overflow-hidden">
       <div className="relative">
         <AmbientAccents />
         <BackgroundBeams className="opacity-30" />
