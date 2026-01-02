@@ -6,17 +6,17 @@ export const StreakDisplay = memo(function StreakDisplay({ streak }) {
   
   return (
     <div
-      className={`rounded-2xl p-6 border backdrop-blur-xl transition-all shadow-xl ${
+      className={`rounded-2xl p-6 border backdrop-blur-xl transition-all ${
         isOnStreak
-          ? "bg-gradient-to-br from-orange-500/20 via-red-500/10 to-yellow-500/10 border-orange-500/40 shadow-orange-500/20"
-          : "bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-white/10"
+          ? "bg-orange-500/10 border-orange-500/30"
+          : "bg-white/[0.03] border-white/10"
       }`}
     >
       <div className="flex items-center gap-4">
         <div className={`h-16 w-16 rounded-xl flex items-center justify-center ${
           isOnStreak 
-            ? "bg-gradient-to-br from-orange-500/30 to-red-500/30 border border-orange-500/40"
-            : "bg-gray-700/50 border border-white/10"
+            ? "bg-orange-500/20 border border-orange-500/30"
+            : "bg-white/[0.05] border border-white/10"
         }`}>
           {isOnStreak ? (
             <Flame className="h-8 w-8 text-orange-400 fill-orange-400 animate-pulse drop-shadow-lg" />

@@ -161,19 +161,29 @@ const AmbientAccents = memo(function AmbientAccents() {
 // ----------------------------
 const GlowCard = memo(function GlowCard({ children, className, glowColor = "emerald" }) {
   const glowColors = {
-    emerald: "hover:shadow-emerald-500/25 hover:border-emerald-500/30",
-    blue: "hover:shadow-blue-500/25 hover:border-blue-500/30",
-    purple: "hover:shadow-purple-500/25 hover:border-purple-500/30",
-    cyan: "hover:shadow-cyan-500/25 hover:border-cyan-500/30",
-    green: "hover:shadow-green-500/25 hover:border-green-500/30",
-    orange: "hover:shadow-orange-500/25 hover:border-orange-500/30",
+    emerald: "hover:shadow-emerald-500/20",
+    blue: "hover:shadow-blue-500/20",
+    purple: "hover:shadow-purple-500/20",
+    cyan: "hover:shadow-cyan-500/20",
+    green: "hover:shadow-green-500/20",
+    orange: "hover:shadow-orange-500/20",
+  };
+  
+  const borderColors = {
+    emerald: "border-emerald-500/20",
+    blue: "border-blue-500/20",
+    purple: "border-purple-500/20",
+    cyan: "border-cyan-500/20",
+    green: "border-green-500/20",
+    orange: "border-orange-500/20",
   };
   
   return (
     <div
       className={cx(
-        "group relative rounded-2xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-black/80 p-4 shadow-xl backdrop-blur-xl",
-        "hover:shadow-2xl transition-all duration-300",
+        "group relative rounded-2xl border bg-white/[0.03] p-4 backdrop-blur-xl",
+        "hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300",
+        borderColors[glowColor],
         glowColors[glowColor],
         className
       )}
@@ -185,12 +195,12 @@ const GlowCard = memo(function GlowCard({ children, className, glowColor = "emer
 
 const Metric = memo(function Metric({ title, value, sub, icon: Icon, right, color = "emerald" }) {
   const iconBgColors = {
-    emerald: "from-emerald-500/30 to-green-500/20",
-    blue: "from-blue-500/30 to-cyan-500/20",
-    purple: "from-purple-500/30 to-pink-500/20",
-    green: "from-green-500/30 to-emerald-500/20",
-    orange: "from-orange-500/30 to-yellow-500/20",
-    cyan: "from-cyan-500/30 to-blue-500/20",
+    emerald: "bg-emerald-500/20 border-emerald-500/30",
+    blue: "bg-blue-500/20 border-blue-500/30",
+    purple: "bg-purple-500/20 border-purple-500/30",
+    green: "bg-green-500/20 border-green-500/30",
+    orange: "bg-orange-500/20 border-orange-500/30",
+    cyan: "bg-cyan-500/20 border-cyan-500/30",
   };
   
   const iconColors = {
@@ -223,7 +233,7 @@ const Metric = memo(function Metric({ title, value, sub, icon: Icon, right, colo
           )}
         </div>
         <div className={cx(
-          "h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center border border-white/10",
+          "h-12 w-12 rounded-xl flex items-center justify-center border",
           iconBgColors[color]
         )}>
           <Sparkles className={cx("h-5 w-5", iconColors[color])} />
@@ -299,8 +309,8 @@ const MiniTag = memo(function MiniTag({ children }) {
 
 const EmptyState = memo(function EmptyState({ title, subtitle, action }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-gray-900/80 p-8 text-center shadow-xl backdrop-blur">
-      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/20 to-cyan-500/10">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center backdrop-blur-xl">
+      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10">
         <Gauge className="h-6 w-6 text-emerald-400" />
       </div>
       <div className="text-lg font-semibold text-white">{title}</div>
@@ -332,10 +342,10 @@ function LoadingGrid() {
   return (
     <div className="grid gap-4 md:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 shadow-xl backdrop-blur">
-          <Skeleton className="h-4 w-28 bg-gray-800" />
-          <Skeleton className="mt-3 h-7 w-20 bg-gray-800" />
-          <Skeleton className="mt-2 h-3 w-44 bg-gray-800" />
+        <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl">
+          <Skeleton className="h-4 w-28 bg-white/10" />
+          <Skeleton className="mt-3 h-7 w-20 bg-white/10" />
+          <Skeleton className="mt-2 h-3 w-44 bg-white/10" />
         </div>
       ))}
     </div>
@@ -588,7 +598,7 @@ export default function App() {
           <GlowCard className="mt-8 p-6" glowColor="emerald">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500/30 to-cyan-500/20 flex items-center justify-center border border-emerald-500/30">
+                <div className="h-12 w-12 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
                   <Activity className="h-6 w-6 text-emerald-400" />
                 </div>
                 <div>
@@ -601,7 +611,7 @@ export default function App() {
                   <div className="h-2 w-2 rounded-full bg-emerald-400 mr-2 animate-pulse shadow-lg shadow-emerald-400/50" />
                   Connected
                 </Badge>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-900/50 border border-white/10">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/10">
                   <span className="text-xs text-gray-400">{user.email}</span>
                   <button
                     onClick={logout}
@@ -620,12 +630,12 @@ export default function App() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter your LeetCode username..."
-                  className="h-12 bg-gray-900/60 border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors rounded-xl text-white placeholder:text-gray-500"
+                  className="h-12 bg-white/[0.05] border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-colors rounded-xl text-white placeholder:text-gray-500"
                 />
               </div>
               <div className="md:w-40">
                 <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
-                  <SelectTrigger className="h-12 bg-gray-900/60 border-white/10 rounded-xl text-white">
+                  <SelectTrigger className="h-12 bg-white/[0.05] border-white/10 rounded-xl text-white">
                     <SelectValue placeholder="Time Window" />
                   </SelectTrigger>
                   <SelectContent>
@@ -733,7 +743,7 @@ export default function App() {
                   {/* Tabs - Enhanced */}
                   <div className="mt-8">
                     <Tabs defaultValue="overview" className="w-full">
-                      <TabsList className="rounded-2xl border border-white/10 bg-gray-900/80 p-1.5 shadow-xl backdrop-blur-xl">
+                      <TabsList className="rounded-2xl border border-white/10 bg-white/[0.03] p-1.5 backdrop-blur-xl">
                         <TabsTrigger value="overview" className="rounded-xl text-gray-400 data-[state=active]:text-emerald-400 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-emerald-500/30">
                           <Gauge className="h-4 w-4 mr-2" />
                           Overview
@@ -757,7 +767,7 @@ export default function App() {
                           <GlowCard className="lg:col-span-2 p-0" glowColor="emerald">
                             <CardHeader className="pb-2">
                               <CardTitle className="flex items-center gap-2 text-base text-white">
-                                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500/30 to-cyan-500/20 flex items-center justify-center border border-emerald-500/30">
+                                <div className="h-8 w-8 rounded-lg bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
                                   <Gauge className="h-4 w-4 text-emerald-400" />
                                 </div>
                                 Readiness Breakdown
@@ -767,12 +777,12 @@ export default function App() {
                             <CardContent>
                               <div className="grid gap-3 md:grid-cols-2">
                                 {Object.entries(readiness?.components || {}).map(([k, v], i) => {
-                                  const colors = ["from-emerald-500/20 to-cyan-500/10 border-emerald-500/30", "from-purple-500/20 to-pink-500/10 border-purple-500/30", "from-cyan-500/20 to-blue-500/10 border-cyan-500/30", "from-orange-500/20 to-yellow-500/10 border-orange-500/30"];
+                                  const colors = ["border-emerald-500/20 bg-emerald-500/10", "border-purple-500/20 bg-purple-500/10", "border-cyan-500/20 bg-cyan-500/10", "border-orange-500/20 bg-orange-500/10"];
                                   const textColors = ["text-emerald-400", "text-purple-400", "text-cyan-400", "text-orange-400"];
                                   return (
                                     <div 
                                       key={k} 
-                                      className={cx("rounded-xl border bg-gradient-to-br p-4", colors[i % colors.length])}
+                                      className={cx("rounded-xl border p-4", colors[i % colors.length])}
                                     >
                                       <div className="text-xs text-gray-400 font-medium uppercase tracking-wider">{k}</div>
                                       <div className="mt-3 flex items-end justify-between">
@@ -783,7 +793,7 @@ export default function App() {
                                   );
                                 })}
                               </div>
-                              <div className="mt-4 rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-cyan-500/5 p-4">
+                              <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
                                 <div className="flex items-center gap-2 text-sm font-medium text-emerald-400">
                                   <Brain className="h-4 w-4" />
                                   Interpretation
@@ -799,7 +809,7 @@ export default function App() {
                           <GlowCard className="p-0" glowColor="purple">
                             <CardHeader className="pb-2">
                               <CardTitle className="flex items-center gap-2 text-base text-white">
-                                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500/30 to-pink-500/20 flex items-center justify-center border border-purple-500/30">
+                                <div className="h-8 w-8 rounded-lg bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
                                   <Rocket className="h-4 w-4 text-purple-400" />
                                 </div>
                                 Why LeetSight?
