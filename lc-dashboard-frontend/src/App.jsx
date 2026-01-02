@@ -326,23 +326,62 @@ export default function App() {
   // Growth phase: Everyone gets full access, no tier restrictions
   const showAds = false; // Disabled - monetization coming later
 
-  // Show auth page if not logged in
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <AuthPage onSuccess={() => window.location.reload()} />;
-  }
-
+  // All hooks must be called before any conditional returns
   const tone = useMemo(() => {
     const score = insights?.readiness?.final ?? 0;
     return readinessTone(score);
   }, [insights]);
+
+  // Calculate streak: consecutive days with snapshots
+  const streak = useMemo(() => {
+    const snaps = history?.snapshots || [];
+    if (snaps.length === 0) return 0;
+
+    // Sort by date descending (most recent first)
+    const sorted = [...snaps].sort(
+      (a, b) => new Date(b.capturedAt) - new Date(a.capturedAt)
+    );
+
+    let count = 0;
+    let currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
+    for (const snap of sorted) {
+      const snapDate = new Date(snap.capturedAt);
+      snapDate.setHours(0, 0, 0, 0);
+
+      const dayDiff = Math.floor(
+        (currentDate - snapDate) / (1000 * 60 * 60 * 24)
+      );
+
+      // If gap is more than 1 day, streak is broken
+      if (dayDiff > 1) break;
+      // If it's the current iteration's expected day, count it
+      if (dayDiff === count) {
+        count++;
+      } else {
+        break;
+      }
+    }
+
+    return count;
+  }, [history]);
+
+  const historySeries = useMemo(() => {
+    const snaps = history?.snapshots || [];
+    return snaps.map((s) => ({
+      day: fmtDay(s.capturedAt),
+      all: s.solved.all,
+      easy: s.solved.easy,
+      medium: s.solved.medium,
+      hard: s.solved.hard,
+    }));
+  }, [history]);
+
+  const topTags = useMemo(() => {
+    const tags = dashboard?.tags || [];
+    return tags.slice(0, 12).map((t) => ({ name: t.tagName, solved: t.solved }));
+  }, [dashboard]);
 
   const fetchAll = async (u = username, d = days) => {
     const uname = (u || "").trim();
@@ -395,66 +434,30 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchAll(username, days);
+    if (user) {
+      fetchAll(username, days);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
+
+  // Show auth page if not logged in
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthPage onSuccess={() => window.location.reload()} />;
+  }
 
   const solved = insights?.profile?.solved;
   const readiness = insights?.readiness;
   const velocity = insights?.history?.velocity;
   const nextTopics = insights?.recommendations?.nextTopics || [];
   const recentAccepted = dashboard?.recentAccepted || [];
-
-  // Calculate streak: consecutive days with snapshots
-  const streak = useMemo(() => {
-    const snaps = history?.snapshots || [];
-    if (snaps.length === 0) return 0;
-
-    // Sort by date descending (most recent first)
-    const sorted = [...snaps].sort(
-      (a, b) => new Date(b.capturedAt) - new Date(a.capturedAt)
-    );
-
-    let count = 0;
-    let currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
-
-    for (const snap of sorted) {
-      const snapDate = new Date(snap.capturedAt);
-      snapDate.setHours(0, 0, 0, 0);
-
-      const dayDiff = Math.floor(
-        (currentDate - snapDate) / (1000 * 60 * 60 * 24)
-      );
-
-      // If gap is more than 1 day, streak is broken
-      if (dayDiff > 1) break;
-      // If it's the current iteration's expected day, count it
-      if (dayDiff === count) {
-        count++;
-      } else {
-        break;
-      }
-    }
-
-    return count;
-  }, [history]);
-
-  const historySeries = useMemo(() => {
-    const snaps = history?.snapshots || [];
-    return snaps.map((s) => ({
-      day: fmtDay(s.capturedAt),
-      all: s.solved.all,
-      easy: s.solved.easy,
-      medium: s.solved.medium,
-      hard: s.solved.hard,
-    }));
-  }, [history]);
-
-  const topTags = useMemo(() => {
-    const tags = dashboard?.tags || [];
-    return tags.slice(0, 12).map((t) => ({ name: t.tagName, solved: t.solved }));
-  }, [dashboard]);
 
   const ToneIcon = tone.icon;
 
